@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView, TokenBlacklistView
 
-from accounts.views import UserAPIUpdate
+from accounts.views import UserAPIUpdate, TGAuth
 
 urlpatterns = [
     path(r'auth/', include('djoser.urls')),
@@ -12,4 +12,5 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify', TokenVerifyView.as_view(), name='token_verify'),
     path('token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
+    path('tg/', TGAuth.as_view())
 ]
