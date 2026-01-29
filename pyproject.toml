@@ -7,5 +7,8 @@ requires-python = ">=3.13"
 dependencies = [
     "django>=6.0.1",
     "django-cors-headers>=4.9.0",
-    "djoser>=2.3.3",
+    "django-rest-framework>=0.1.0",
+    "django-telegram-login>=0.2.3",
+    "djangorestframework-simplejwt>=5.5.1",
+    "icecream>=2.1.10",
 ]

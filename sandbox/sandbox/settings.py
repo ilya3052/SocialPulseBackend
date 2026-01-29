@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-m_k^$fp4d2yh5a#i=^2yg=*m2f5f%88ot6q1fmf8^%g*5pvlbs
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,13 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'rest_framework',
+    'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    # 'rest_framework.authtoken',
-    'djoser',
 
-'oauth2_provider',
-    'social_django',
-    'drf_social_oauth2',
+    'django_telegram_login'
 ]
 
 MIDDLEWARE = [
@@ -129,7 +126,7 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 STATIC_URL = 'static/'
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
@@ -174,6 +171,8 @@ SIMPLE_JWT = {
     "CHECK_USER_IS_ACTIVE": True,
 }
 
+TG_SHORT_TOKEN_LIFETIME = timedelta(minutes=15)
+
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -181,18 +180,13 @@ REST_FRAMEWORK = {
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
 }
 
-AUTHENTICATION_BACKENDS = (
-    'social_core.backends.telegram.TelegramAuth',
-    'drf_social_oauth2.backends.DjangoOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
-)
 
-LOGIN_REDIRECT_URL = 'api/v1/accounts/users/me/'
-SOCIAL_AUTH_TELEGRAM_BOT_TOKEN = '8489648854:AAGPCAwpJSYAiq_4wffMMO17HdOzhAESEOQ'
+LOGIN_REDIRECT_URL = 'http://127.0.0.1/api/v1/accounts/users/me'
+
+TELEGRAM_BOT_NAME = "socialpulsesandboxbot"
+TELEGRAM_BOT_TOKEN = "8489648854:AAGPCAwpJSYAiq_4wffMMO17HdOzhAESEOQ"
+TELEGRAM_LOGIN_REDIRECT_URL = 'http://127.0.0.1/api/v1/accounts/tg/callback/'
