@@ -1,22 +1,23 @@
+from smtplib import SMTPException
+
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_telegram_login.authentication import verify_telegram_authentication
 from django_telegram_login.errors import NotTelegramDataError, TelegramDataIsOutdatedError
 from rest_framework import status, generics
-from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from sandbox import settings
-from .models import TelegramToken, CustomUser
+from .models import TelegramToken, CustomUser, EmailActivate
 from .serializers import CustomUserSerializer, UserRegisterSerializer, TelegramTokenPairSerializer, \
     UserPasswordSerializer, TelegramBindingSerializer
-
-from icecream import ic
+from .utils import generate_short_token, prepare_message
 
 User: CustomUser = get_user_model()
 
@@ -118,7 +119,9 @@ class TelegramBindingView(generics.UpdateAPIView):
             print(request.data)
             users = User.objects.filter(tg_id=request.data.get('tg_id'))
             if users:
-                return Response({"error": "Произошла ошибка при привязке аккаунта, проверьте правильность введенных данных"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Произошла ошибка при привязке аккаунта, проверьте правильность введенных данных"},
+                    status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(user, data=request.data)
 
@@ -199,6 +202,53 @@ class TelegramConvertTokenView(APIView):
         return Response({"access": access}, status=status.HTTP_200_OK)
 
 
+class EmailSendMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def get(self, request, *args, **kwargs):
+        user: CustomUser = self.get_object()
+        email = user.email
+        token = generate_short_token()
+        message = prepare_message(token)
+        try:
+            send_mail(
+                subject="Подтверждение электронной почты",
+                message="",
+                html_message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False)
+        except SMTPException as smtp:
+            return Response({"smtp_error": smtp})
+
+        email_activate_instance = EmailActivate.objects.filter(user=user).first()
+        if email_activate_instance:
+            email_activate_instance.delete()
+
+        EmailActivate.objects.create(user=user, token=token)
+
+        return Response({"status": "Письмо с подтверждением отправлено"}, status=status.HTTP_200_OK)
+
+
 class EmailActivationView(APIView):
     permission_classes = [AllowAny]
-    # def post(self, request, *args, **kwargs):
+
+    def post(self, request, *args, **kwargs):
+        token = request.data.get('token')
+        token_pair: EmailActivate = EmailActivate.objects.filter(token=token).first()
+        if not token_pair:
+            return Response({"error": "Произошла ошибка при подтверждении email"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if token_pair.expires_at < timezone.now():
+            token_pair.delete()
+            return Response({"error": "Время действия ссылки истекло, отправьте подтверждение заново"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        user = token_pair.user
+        user.is_email_confirmed = True
+        user.save()
+        token_pair.delete()
+        return Response({"status": "Email подтвержден"}, status=status.HTTP_200_OK)

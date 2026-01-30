@@ -1,9 +1,8 @@
 from django.contrib.auth.password_validation import validate_password
-from icecream import ic
 from rest_framework import serializers
 
-from accounts.logic import generate_short_token
-from accounts.models import CustomUser, TelegramToken
+from accounts.models import CustomUser, TelegramToken, EmailActivate
+from accounts.utils import generate_short_token
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -63,6 +62,7 @@ class UserPasswordSerializer(serializers.Serializer):
 
         return data
 
+
 class TelegramBindingSerializer(serializers.Serializer):
     tg_id = serializers.CharField(write_only=True, allow_null=True, allow_blank=True)
     tg_link = serializers.CharField(write_only=True, allow_null=True, allow_blank=True)
@@ -73,13 +73,13 @@ class TelegramBindingSerializer(serializers.Serializer):
         instance.save()
         return instance
 
+
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         # поле пароля оставить только в разработке, в идеале его быть не должно
         fields = ('id', 'first_name', 'password', 'last_name', 'username', 'email', 'tg_link', 'vk_link', 'tg_id')
         read_only_fields = ('id', 'password')
-
 
     def update(self, instance, validated_data):
         instance.first_name = validated_data.get('first_name', instance.first_name)
@@ -94,3 +94,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class EmailActivateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailActivate
+        fields = ('user', 'token')
+        read_only_fields = ('user',)

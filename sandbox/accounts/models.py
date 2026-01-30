@@ -6,13 +6,16 @@ from django.utils import timezone
 
 from sandbox import settings
 
+def default_expires_at():
+    return timezone.now() + settings.SHORT_TOKEN_LIFETIME
 
 # Create your models here.
 class CustomUser(AbstractUser):
     REQUIRED_FIELDS = [""]
     tg_link = models.CharField(max_length=255, blank=True, null=True)
-    tg_id = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    tg_id = models.IntegerField(blank=True, null=True, unique=True)
     vk_link = models.CharField(max_length=255, blank=True, null=True)
+    vk_id = models.IntegerField(blank=True, null=True, unique=True)
     is_email_confirmed = models.BooleanField(default=False)
 
 
@@ -20,9 +23,11 @@ class TelegramToken(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     short_token = models.CharField(max_length=64, unique=True)
     jwt_token = models.CharField(max_length=512)
-    expires_at = models.DateTimeField(default=timezone.now() + settings.TG_SHORT_TOKEN_LIFETIME)
+    expires_at = models.DateTimeField(default=default_expires_at)
 
-class EmailActivation(models.Model):
+
+class EmailActivate(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     token = models.CharField(max_length=64, unique=True)
-    expires_at = models.DateTimeField(default=timezone.now() + timedelta(minutes=15))
+    expires_at = models.DateTimeField(default=default_expires_at)
+

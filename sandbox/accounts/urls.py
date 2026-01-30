@@ -3,7 +3,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from accounts.serializers import UserPasswordSerializer
 from accounts.views import UserAPIUpdate, TelegramCallbackView, UserAPIRegistration, TelegramTokenPairView, \
-    TelegramConvertTokenView, UserChangePasswordView, TelegramBindingView, EmailActivationView
+    TelegramConvertTokenView, UserChangePasswordView, TelegramBindingView, EmailActivationView, EmailSendMessageView
 
 urlpatterns = [
 
@@ -25,9 +25,7 @@ urlpatterns = [
     path('tg/token/short/', TelegramTokenPairView.as_view(), name='token_short'),
     path('tg/token/short/convert/', TelegramConvertTokenView.as_view(), name='token_convert'),
 
-
+    path('email/send/', EmailSendMessageView.as_view(), name='email_send'),
     path('email/activate/', EmailActivationView.as_view(), name='email_activate'),
-
-
 
 ]

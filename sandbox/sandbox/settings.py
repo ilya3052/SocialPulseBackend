@@ -171,7 +171,7 @@ SIMPLE_JWT = {
     "CHECK_USER_IS_ACTIVE": True,
 }
 
-TG_SHORT_TOKEN_LIFETIME = timedelta(minutes=15)
+SHORT_TOKEN_LIFETIME = timedelta(minutes=15)
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
@@ -185,8 +185,20 @@ REST_FRAMEWORK = {
 }
 
 
+
+
 LOGIN_REDIRECT_URL = 'http://127.0.0.1/api/v1/accounts/users/me'
 
 TELEGRAM_BOT_NAME = "socialpulsesandboxbot"
 TELEGRAM_BOT_TOKEN = "8489648854:AAGPCAwpJSYAiq_4wffMMO17HdOzhAESEOQ"
 TELEGRAM_LOGIN_REDIRECT_URL = 'http://127.0.0.1/api/v1/accounts/tg/callback/'
+
+EMAIL_HOST = 'smtp.mail.ru'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = "socialpulsenoreply@mail.ru"
+EMAIL_HOST_PASSWORD = "F8NdxfHf4qgsuLtYAwqB"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+SERVER_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
