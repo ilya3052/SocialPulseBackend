@@ -193,6 +193,8 @@ TELEGRAM_BOT_NAME = "socialpulsesandboxbot"
 TELEGRAM_BOT_TOKEN = "8489648854:AAGPCAwpJSYAiq_4wffMMO17HdOzhAESEOQ"
 TELEGRAM_LOGIN_REDIRECT_URL = 'http://127.0.0.1/api/v1/accounts/tg/callback/'
 
+CLIENT_ID = '54438538'
+
 EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_PORT = 465
 EMAIL_HOST_USER = "socialpulsenoreply@mail.ru"

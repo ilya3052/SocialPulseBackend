@@ -1,3 +1,4 @@
+import json
 import secrets
 
 def generate_short_token() -> str:
@@ -10,3 +11,15 @@ def prepare_message(token) -> str:
     message = f"Для подтверждения электронной почты перейдите по <p><a href=\"{url}\" target=_blank>ссылке</a></p>"
 
     return message
+
+def try_parse_json(value):
+    """
+    Если value — строка с JSON, пытаемся распарсить.
+    Иначе возвращаем как есть.
+    """
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value
+    return value

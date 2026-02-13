@@ -1,29 +1,39 @@
+import json
+import logging
 from smtplib import SMTPException
 
 from django.contrib.auth import get_user_model
+from django.contrib.sites import requests
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_telegram_login.authentication import verify_telegram_authentication
 from django_telegram_login.errors import NotTelegramDataError, TelegramDataIsOutdatedError
+from icecream import ic
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+import requests
+
 from sandbox import settings
-from .models import TelegramToken, CustomUser, EmailActivate
+from .logger import setup_logger
+from .models import TelegramToken, CustomUser, EmailActivate, VKTokens
 from .serializers import CustomUserSerializer, UserRegisterSerializer, TelegramTokenPairSerializer, \
     UserPasswordSerializer, TelegramBindingSerializer
-from .utils import generate_short_token, prepare_message
+from .utils import generate_short_token, prepare_message, try_parse_json
 
 User: CustomUser = get_user_model()
 
+logger = setup_logger(log_file="sandbox/logs/debug.log")
 
 class UserAPIRegistration(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
+        # ic(request.data)
         serializer = UserRegisterSerializer(data=request.data)
         if not serializer.is_valid(raise_exception=True):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -47,19 +57,27 @@ class UserAPIUpdate(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        ic(request, request.user)
         user = get_object_or_404(User, id=request.user.id)
         serializer = CustomUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
+        ic(request.data)
 
         # по идее этот сценарий срабатывает лишь в одном случае - в случае привязки аккаунта тг к текущему
         # если пользователь имеет созданный обычный аккаунт и также он авторизовался через тг то у него создано два аккаунта
         # и при привязке тг аккаунта к созданному аккаунту (без тг) аккаунт авторизованный через тг удаляется
 
-        if request.data.get('tg_id'):
+        if request.data.get('tg_id', None):
             old_user = User.objects.filter(tg_id=request.data.get('tg_id')).first()
+            if old_user:
+                old_user.delete()
+
+        if request.data.get('vk_id', None):
+
+            old_user = User.objects.filter(vk_id=request.data.get('vk_id')).first()
             if old_user:
                 old_user.delete()
 
@@ -150,20 +168,23 @@ class TelegramCallbackView(APIView):
             return Response({'error': 'Некорректные данные Telegram'}, status=status.HTTP_400_BAD_REQUEST)
 
         telegram_id = data.get('id')
+        username = 'tg_' + data.get('username', telegram_id)
+        first_name = data.get('first_name', '')
         try:
             user = User.objects.get(tg_id=telegram_id)
         except User.DoesNotExist:
             try:
                 user = User.objects.create(
                     tg_id=telegram_id,
-                    tg_link='https://t.me/' + data.get('username', telegram_id),
-                    first_name=data.get('first_name', ''),
-                    username=data.get('username', f'tg_{telegram_id}'),
+                    tg_link='https://t.me/' + username.split('_')[1],
+                    first_name=first_name,
+                    username=username,
                 )
             except IntegrityError as ie:
                 return Response({'error': f'Ошибка создания пользователя: {str(ie)}'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
+        # попытаться получить актуальные токены для юзера если он существует
         refresh = RefreshToken.for_user(user)
 
         return Response({
@@ -174,6 +195,108 @@ class TelegramCallbackView(APIView):
             #     'username': user.username,
             # }
         }, status=status.HTTP_200_OK)
+
+
+class VKCallbackView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        internal_data = request.data
+
+        internal_access_token = internal_data.get('access_token')
+        internal_id_token = internal_data.get('id_token')
+        internal_refresh_token = internal_data.get('refresh_token')
+        expires_in = internal_data.get('expires_in')
+
+        params = {
+            'fields': 'screen_name',
+            'v': 5.199
+        }
+        headers = {
+            'Authorization': f'Bearer {internal_access_token}',
+        }
+
+        req = requests.get(
+            'https://api.vk.ru/method/users.get',
+            headers=headers,
+            params=params
+        )
+
+        data = req.json().get('response')[0]
+        vk_id = data.get('id')
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
+        screen_name = data.get('screen_name')
+
+        try:
+            user = User.objects.get(vk_id=vk_id)
+        except User.DoesNotExist:
+            try:
+                user = User.objects.create(
+                    username='vk_' + screen_name,
+                    first_name=first_name,
+                    last_name=last_name,
+                    vk_id=vk_id,
+                    vk_link='https://vk.ru/' + screen_name,
+                )
+            except IntegrityError as ie:
+                return Response({'error': f'Ошибка создания пользователя: {str(ie)}'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        refresh = RefreshToken.for_user(user)
+
+        vk_token_instance = VKTokens.objects.filter(user=user).first()
+
+        if vk_token_instance and timezone.timedelta(
+                vk_token_instance.expires_in) + vk_token_instance.added_at < timezone.now():
+            vk_token_instance.delete()
+
+            VKTokens.objects.create(
+                user=user,
+                refresh_vk_token=internal_refresh_token,
+                id_vk_token=internal_id_token,
+                access_vk_token=internal_access_token,
+                expires_in=expires_in,
+            )
+
+        if not vk_token_instance:
+            VKTokens.objects.create(
+                user=user,
+                refresh_vk_token=internal_refresh_token,
+                id_vk_token=internal_id_token,
+                access_vk_token=internal_access_token,
+                expires_in=expires_in,
+            )
+
+        return Response({'request': {
+            'access_token': str(refresh.access_token),
+            'refresh_token': str(refresh),
+            'vk_id': str(vk_id),
+        }}, status=status.HTTP_200_OK)
+
+
+class VKCallbackUser(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+
+        access_token = data.get('vk_token')
+        params = {
+            'fields': 'screen_name',
+            'v': 5.199
+        }
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+        }
+
+        req = requests.get(
+            'https://api.vk.ru/method/users.get',
+            headers=headers,
+            params=params
+        )
+        ic(req.json())
+        response = req.json().get('response')[0]
+        return Response({'username': response.get('screen_name')}, status=status.HTTP_200_OK)
 
 
 class TelegramTokenPairView(APIView):
@@ -252,3 +375,24 @@ class EmailActivationView(APIView):
         user.save()
         token_pair.delete()
         return Response({"status": "Email подтвержден"}, status=status.HTTP_200_OK)
+
+
+class DebugView(APIView):
+    def post(self, request, *args, **kwargs):
+        data = request.data
+
+        # пробуем распарсить вложенные JSON-строки
+        parsed_data = {
+            key: try_parse_json(value)
+            for key, value in data.items()
+        }
+
+        formatted_json = json.dumps(
+            parsed_data,
+            indent=4,
+            ensure_ascii=False
+        )
+
+        logger.debug("Incoming request data:\n%s", formatted_json)
+
+        return Response({"status": "ok"}, status=status.HTTP_200_OK)

@@ -10,7 +10,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'password', 'password2')
+        fields = ('username', 'password', 'password2')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
@@ -78,7 +78,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         # поле пароля оставить только в разработке, в идеале его быть не должно
-        fields = ('id', 'first_name', 'password', 'last_name', 'username', 'email', 'tg_link', 'vk_link', 'tg_id')
+        fields = ('id', 'first_name', 'password', 'last_name', 'username', 'email', 'tg_link', 'vk_link', 'tg_id', 'vk_id')
         read_only_fields = ('id', 'password')
 
     def update(self, instance, validated_data):
@@ -90,7 +90,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
         instance.tg_link = validated_data.get('tg_link', instance.tg_link)
         instance.tg_id = validated_data.get('tg_id', instance.tg_id)
 
-        # instance.vk_link = validated_data.get('vk_link', instance.vk_link)
+        instance.vk_id = validated_data.get('vk_id', instance.vk_id)
+        instance.vk_link = validated_data.get('vk_link', instance.vk_link)
 
         instance.save()
         return instance
