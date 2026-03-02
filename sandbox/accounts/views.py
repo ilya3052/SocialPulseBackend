@@ -130,11 +130,7 @@ class TelegramBindingView(generics.UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         user = self.get_object()
-        print('данные вне условия')
-        print(request.data)
         if request.data.get('tg_id', None):
-            print('данные внутри условия')
-            print(request.data)
             users = User.objects.filter(tg_id=request.data.get('tg_id'))
             if users:
                 return Response(
@@ -320,9 +316,13 @@ class TelegramConvertTokenView(APIView):
             token_pair.delete()
             return Response({"error": "Время жизни токена истекло"}, status=status.HTTP_400_BAD_REQUEST)
 
-        access = token_pair.jwt_token
+        access = token_pair.access_token
+        refresh = token_pair.refresh_token
         token_pair.delete()
-        return Response({"access": access}, status=status.HTTP_200_OK)
+        return Response({
+            "access": access,
+            "refresh": refresh,
+        }, status=status.HTTP_200_OK)
 
 
 class EmailSendMessageView(APIView):
