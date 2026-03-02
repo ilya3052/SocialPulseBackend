@@ -21,7 +21,8 @@ class CustomUser(AbstractUser):
 class TelegramToken(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, unique=True)
     short_token = models.CharField(max_length=64, unique=True)
-    jwt_token = models.CharField(max_length=512)
+    access_token = models.CharField(max_length=512)
+    refresh_token = models.CharField(max_length=512)
     expires_at = models.DateTimeField(default=default_expires_at)
 
 class VKTokens(models.Model):
