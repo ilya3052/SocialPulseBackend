@@ -11,7 +11,6 @@ def default_expires_at():
 
 # Create your models here.
 class CustomUser(AbstractUser):
-    REQUIRED_FIELDS = [""]
     tg_link = models.CharField(max_length=255, blank=True, null=True)
     tg_id = models.IntegerField(blank=True, null=True)
     vk_link = models.CharField(max_length=255, blank=True, null=True)
