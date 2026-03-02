@@ -1,4 +1,5 @@
 from django.contrib.auth.password_validation import validate_password
+from icecream import ic
 from rest_framework import serializers
 
 from accounts.models import CustomUser, TelegramToken, EmailActivate
@@ -10,7 +11,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'password', 'password2')
+        fields = ('username', 'email', 'password', 'password2')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
@@ -21,7 +22,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         validated_data.pop('password2', None)
-        user = CustomUser.objects.create_user(**validated_data, password=password)
+        email = validated_data.pop('email')
+        user = CustomUser.objects.create_user(**validated_data, password=password, email=email)
         return user
 
 
@@ -51,11 +53,11 @@ class UserPasswordSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data['new_password'] != data['confirm_password']:
-            raise serializers.ValidationError({"confirm_password": 'Passwords don\'t match'})
+            raise serializers.ValidationError({"confirm_password": 'Пароли не совпадают.'})
 
         if data["old_password"] == data["new_password"]:
             raise serializers.ValidationError({
-                "new_password": "New password must be different from old password"
+                "new_password": "Новый пароль не должен совпадать со старым."
             })
 
         validate_password(data['new_password'])
@@ -78,7 +80,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         # поле пароля оставить только в разработке, в идеале его быть не должно
-        fields = ('id', 'first_name', 'password', 'last_name', 'username', 'email', 'tg_link', 'vk_link', 'tg_id', 'vk_id')
+        fields = ('id', 'first_name', 'password', 'last_name', 'username',
+                  'email', 'tg_link', 'vk_link', 'tg_id', 'vk_id', 'is_email_confirmed')
         read_only_fields = ('id', 'password')
 
     def update(self, instance, validated_data):
