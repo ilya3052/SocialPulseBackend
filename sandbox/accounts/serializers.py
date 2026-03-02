@@ -32,17 +32,18 @@ class TelegramTokenPairSerializer(serializers.Serializer):
 
     class Meta:
         model = TelegramToken
-        fields = ('user', 'jwt_token')
+        fields = ('user', 'access_token', 'refresh_token')
         read_only_fields = ('short_token',)
 
     def create(self, validated_data):
         user = self.context['request'].user
-        jwt_token = self.validated_data['jwt_token']
+        access_token = self.validated_data['access_token']
+        refresh_token = self.validated_data['refresh_token']
         short_token = generate_short_token()
 
         TelegramToken.objects.filter(user=user).delete()
 
-        token_pair = TelegramToken.objects.create(user=user, jwt_token=jwt_token, short_token=short_token)
+        token_pair = TelegramToken.objects.create(user=user, access_token=access_token, refresh_token=refresh_token, short_token=short_token)
         return token_pair
 
 
