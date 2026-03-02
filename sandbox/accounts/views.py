@@ -33,9 +33,9 @@ logger = setup_logger(log_file="sandbox/logs/debug.log")
 class UserAPIRegistration(APIView):
     permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
-        # ic(request.data)
+        ic(request.data)
         serializer = UserRegisterSerializer(data=request.data)
-        if not serializer.is_valid(raise_exception=True):
+        if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         user = serializer.save()
@@ -53,18 +53,16 @@ class UserAPIRegistration(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
-class UserAPIUpdate(APIView):
+class UserAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        ic(request, request.user)
         user = get_object_or_404(User, id=request.user.id)
         serializer = CustomUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
-        ic(request.data)
 
         # по идее этот сценарий срабатывает лишь в одном случае - в случае привязки аккаунта тг к текущему
         # если пользователь имеет созданный обычный аккаунт и также он авторизовался через тг то у него создано два аккаунта
@@ -99,10 +97,12 @@ class UserChangePasswordView(generics.UpdateAPIView):
         user = self.get_object()
 
         serializer = self.get_serializer(user, data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
         if not user.check_password(serializer.validated_data.get("old_password")):
-            return Response({"error": "Неверный старый пароль"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"wrong_old_password": "Неверно указан старый пароль"}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(serializer.validated_data.get("new_password"))
         user.save()
@@ -190,10 +190,10 @@ class TelegramCallbackView(APIView):
         return Response({
             "refresh": str(refresh),
             'access': str(refresh.access_token),
-            # 'user' : {
-            #     'id': user.id,
-            #     'username': user.username,
-            # }
+            'user' : {
+                'id': user.id,
+                'username': user.username,
+            }
         }, status=status.HTTP_200_OK)
 
 

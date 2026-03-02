@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView, TokenBlacklistView
 
 from accounts.serializers import UserPasswordSerializer
-from accounts.views import UserAPIUpdate, TelegramCallbackView, UserAPIRegistration, TelegramTokenPairView, \
+from accounts.views import UserAPIView, TelegramCallbackView, UserAPIRegistration, TelegramTokenPairView, \
     TelegramConvertTokenView, UserChangePasswordView, TelegramBindingView, EmailActivationView, EmailSendMessageView, \
     VKCallbackView, DebugView, VKCallbackUser
 
@@ -10,7 +10,7 @@ urlpatterns = [
 
     path('register/', UserAPIRegistration.as_view(), name='register'),
 
-    path(r'users/me/', UserAPIUpdate.as_view(), name='me'),
+    path(r'users/me/', UserAPIView.as_view(), name='me'),
 
     path('users/change-password/', UserChangePasswordView.as_view(), name='change_password'),
 
