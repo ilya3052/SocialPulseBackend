@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from accounts.serializers import UserPasswordSerializer
 from accounts.views import UserAPIView, TelegramCallbackView, UserAPIRegistration, TelegramTokenPairView, \
     TelegramConvertTokenView, UserChangePasswordView, TelegramBindingView, EmailActivationView, EmailSendMessageView, \
-    VKCallbackView, DebugView, VKCallbackUser
+    VKCallbackView, DebugView, VKCallbackUser, UserSetPasswordView
 
 urlpatterns = [
 
@@ -13,6 +13,7 @@ urlpatterns = [
     path(r'users/me/', UserAPIView.as_view(), name='me'),
 
     path('users/change-password/', UserChangePasswordView.as_view(), name='change_password'),
+    path('users/set-password/', UserSetPasswordView.as_view(), name='set_password'),
 
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
