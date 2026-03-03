@@ -23,7 +23,7 @@ from sandbox import settings
 from .logger import setup_logger
 from .models import TelegramToken, CustomUser, EmailActivate, VKTokens
 from .serializers import CustomUserSerializer, UserRegisterSerializer, TelegramTokenPairSerializer, \
-    UserPasswordSerializer, TelegramBindingSerializer
+    UserPasswordSerializer, TelegramBindingSerializer, UserSetPasswordSerializer
 from .utils import generate_short_token, prepare_message, try_parse_json
 
 User: CustomUser = get_user_model()
@@ -33,7 +33,6 @@ logger = setup_logger(log_file="sandbox/logs/debug.log")
 class UserAPIRegistration(APIView):
     permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
-        ic(request.data)
         serializer = UserRegisterSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -59,23 +58,14 @@ class UserAPIView(APIView):
     def get(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
         serializer = CustomUserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        has_password = user.has_usable_password()
+        return Response({"data": serializer.data, "has_password": has_password}, status=status.HTTP_200_OK)
 
     def patch(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
 
-        # по идее этот сценарий срабатывает лишь в одном случае - в случае привязки аккаунта тг к текущему
-        # если пользователь имеет созданный обычный аккаунт и также он авторизовался через тг то у него создано два аккаунта
-        # и при привязке тг аккаунта к созданному аккаунту (без тг) аккаунт авторизованный через тг удаляется
-
         if request.data.get('tg_id', None):
             old_user = User.objects.filter(tg_id=request.data.get('tg_id')).first()
-            if old_user:
-                old_user.delete()
-
-        if request.data.get('vk_id', None):
-
-            old_user = User.objects.filter(vk_id=request.data.get('vk_id')).first()
             if old_user:
                 old_user.delete()
 
@@ -121,6 +111,38 @@ class UserChangePasswordView(generics.UpdateAPIView):
         }, status=status.HTTP_200_OK)
 
 
+class UserSetPasswordView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSetPasswordSerializer
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+
+        serializer = self.get_serializer(user, data=request.data, context={"request": request})
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(serializer.validated_data.get("new_password"))
+        user.save()
+
+        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+
+        outstanding_tokens = OutstandingToken.objects.filter(user=user, expires_at__gt=timezone.now())
+        for token in outstanding_tokens:
+            BlacklistedToken.objects.get_or_create(token=token)
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token)
+        }, status=status.HTTP_200_OK)
+
+
 class TelegramBindingView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TelegramBindingSerializer
@@ -143,7 +165,7 @@ class TelegramBindingView(generics.UpdateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         serializer.save()
-        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
 
 class TelegramCallbackView(APIView):
@@ -176,6 +198,8 @@ class TelegramCallbackView(APIView):
                     first_name=first_name,
                     username=username,
                 )
+                user.set_unusable_password()
+                user.save()
             except IntegrityError as ie:
                 return Response({'error': f'Ошибка создания пользователя: {str(ie)}'},
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -234,6 +258,8 @@ class VKCallbackView(APIView):
                     vk_id=vk_id,
                     vk_link='https://vk.ru/' + screen_name,
                 )
+                user.set_unusable_password()
+                user.save()
             except IntegrityError as ie:
                 return Response({'error': f'Ошибка создания пользователя: {str(ie)}'},
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -273,9 +299,13 @@ class VKCallbackView(APIView):
 class VKCallbackUser(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get_object(self):
+
+        return self.request.user
+
     def post(self, request, *args, **kwargs):
         data = request.data
-
+        user = self.get_object()
         access_token = data.get('vk_token')
         params = {
             'fields': 'screen_name',
@@ -290,9 +320,14 @@ class VKCallbackUser(APIView):
             headers=headers,
             params=params
         )
-        ic(req.json())
         response = req.json().get('response')[0]
-        return Response({'username': response.get('screen_name')}, status=status.HTTP_200_OK)
+        old_user = User.objects.filter(vk_id=response.get('id')).first()
+        if old_user:
+            old_user.delete()
+        user.vk_id = response.get('id')
+        user.vk_link = 'https://vk.ru/' + response.get('screen_name')
+        user.save()
+        return Response(status=status.HTTP_200_OK)
 
 
 class TelegramTokenPairView(APIView):
