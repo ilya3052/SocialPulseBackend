@@ -369,6 +369,13 @@ class EmailSendMessageView(APIView):
         email = user.email
         token = generate_short_token()
         message = prepare_message(token)
+
+        email_activate_instance = EmailActivate.objects.filter(user=user).first()
+        if email_activate_instance:
+            email_activate_instance.delete()
+
+        EmailActivate.objects.create(user=user, token=token)
+
         try:
             send_mail(
                 subject="Подтверждение электронной почты",
@@ -379,13 +386,6 @@ class EmailSendMessageView(APIView):
                 fail_silently=False)
         except SMTPException as smtp:
             return Response({"smtp_error": smtp})
-
-        email_activate_instance = EmailActivate.objects.filter(user=user).first()
-        if email_activate_instance:
-            email_activate_instance.delete()
-
-        EmailActivate.objects.create(user=user, token=token)
-
         return Response({"status": "Письмо с подтверждением отправлено"}, status=status.HTTP_200_OK)
 
 
