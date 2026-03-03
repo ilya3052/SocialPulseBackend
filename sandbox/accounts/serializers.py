@@ -65,6 +65,21 @@ class UserPasswordSerializer(serializers.Serializer):
 
         return data
 
+class UserSetPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(style={'input_type': 'password'}, write_only=True, required=True)
+    confirm_password = serializers.CharField(style={'input_type': 'password'}, write_only=True, required=True)
+
+    def validate(self, data):
+        request = self.context.get('request')
+
+        if request.user.has_usable_password():
+            raise serializers.ValidationError({"password_error": "Невозможно установить пароль!"})
+
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": 'Пароли не совпадают.'})
+
+        validate_password(data['new_password'])
+        return data
 
 class TelegramBindingSerializer(serializers.Serializer):
     tg_id = serializers.CharField(write_only=True, allow_null=True, allow_blank=True)
