@@ -1,5 +1,4 @@
 import json
-import logging
 from smtplib import SMTPException
 
 from django.contrib.auth import get_user_model
@@ -10,7 +9,6 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_telegram_login.authentication import verify_telegram_authentication
 from django_telegram_login.errors import NotTelegramDataError, TelegramDataIsOutdatedError
-from icecream import ic
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -30,8 +28,10 @@ User: CustomUser = get_user_model()
 
 logger = setup_logger(log_file="sandbox/logs/debug.log")
 
+
 class UserAPIRegistration(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         serializer = UserRegisterSerializer(data=request.data)
         if not serializer.is_valid():
@@ -89,7 +89,6 @@ class UserChangePasswordView(generics.UpdateAPIView):
         serializer = self.get_serializer(user, data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
         if not user.check_password(serializer.validated_data.get("old_password")):
             return Response({"wrong_old_password": "Неверно указан старый пароль"}, status=status.HTTP_400_BAD_REQUEST)
@@ -210,7 +209,7 @@ class TelegramCallbackView(APIView):
         return Response({
             "refresh": str(refresh),
             'access': str(refresh.access_token),
-            'user' : {
+            'user': {
                 'id': user.id,
                 'username': user.username,
             }
@@ -300,7 +299,6 @@ class VKCallbackUser(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-
         return self.request.user
 
     def post(self, request, *args, **kwargs):
