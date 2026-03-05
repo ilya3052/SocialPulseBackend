@@ -12,3 +12,4 @@ wheels/
 
 *.log
 *.sqlite3
+*.html
