@@ -44,10 +44,6 @@ class UserAPIRegistration(APIView):
             'access': str(refresh.access_token)
         }
         return Response({
-            "user": {
-                "id": user.id,
-                "username": user.username,
-            },
             "tokens": tokens,
         }, status=status.HTTP_201_CREATED)
 
@@ -170,12 +166,13 @@ class TelegramBindingView(generics.UpdateAPIView):
 class TelegramCallbackView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request, *args, **kwargs):
-        data = request.GET.dict()
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        str_data = {k: str(v) for k, v in data.items()}
         try:
             is_valid = verify_telegram_authentication(
                 bot_token=settings.TELEGRAM_BOT_TOKEN,
-                request_data=data
+                request_data=str_data
             )
 
         except (NotTelegramDataError, TelegramDataIsOutdatedError) as error:
@@ -209,10 +206,6 @@ class TelegramCallbackView(APIView):
         return Response({
             "refresh": str(refresh),
             'access': str(refresh.access_token),
-            'user': {
-                'id': user.id,
-                'username': user.username,
-            }
         }, status=status.HTTP_200_OK)
 
 
@@ -396,7 +389,7 @@ class EmailActivationView(APIView):
         token = request.data.get('token')
         token_pair: EmailActivate = EmailActivate.objects.filter(token=token).first()
         if not token_pair:
-            return Response({"error": "Произошла ошибка при подтверждении email"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"token": "Произошла ошибка при обработке токена"}, status=status.HTTP_410_GONE)
 
         if token_pair.expires_at < timezone.now():
             token_pair.delete()
