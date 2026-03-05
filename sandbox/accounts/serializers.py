@@ -28,7 +28,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 
 class TelegramTokenPairSerializer(serializers.Serializer):
-    jwt_token = serializers.CharField(write_only=True, max_length=512)
+    access_token = serializers.CharField(write_only=True, max_length=512)
+    refresh_token = serializers.CharField(write_only=True, max_length=512)
 
     class Meta:
         model = TelegramToken
