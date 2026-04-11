@@ -10,6 +10,8 @@ wheels/
 .venv
 .idea
 
+*.env
+
 *.log
 *.sqlite3
 *.html
