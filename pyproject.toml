@@ -10,6 +10,13 @@ dependencies = [
     "django-rest-framework>=0.1.0",
     "django-telegram-login>=0.2.3",
     "djangorestframework-simplejwt>=5.5.1",
-    "icecream>=2.1.10",
+    "djangorestframework-stubs>=3.16.9",
+    "psycopg[binary]>=3.3.3",
+    "python-dotenv>=1.2.2",
     "requests>=2.32.5",
+]
+
+[dependency-groups]
+dev = [
+    "icecream>=2.2.0",
 ]
