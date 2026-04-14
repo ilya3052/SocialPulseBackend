@@ -122,3 +122,69 @@ class EmailActivateSerializer(serializers.ModelSerializer):
         model = EmailActivate
         fields = ('user', 'token')
         read_only_fields = ('user',)
+
+
+# после завершения перенести в другое приложение аналогично моделям
+
+class PlatformSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Platform
+        fields = ('id', 'name', 'alias')
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    platform = PlatformSerializer(read_only=True)
+    platform_id = serializers.PrimaryKeyRelatedField(
+        queryset=Platform.objects.all(),
+        source='platform',
+        write_only=True
+    )
+    user = CustomUserSerializer(read_only=True, many=True)  # а надо ли возвращать?
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        source='user',
+        many=True,
+        write_only=True
+    )
+    service_account_id = serializers.PrimaryKeyRelatedField(
+        queryset=ServiceAccount.objects.all(),
+        source='service_account'
+    )
+
+    class Meta:
+        model = Group
+        fields = ('name', 'link', 'external_id', 'added_at',
+                  'platform_id', 'platform',
+                  'user', 'user_id',
+                  'service_account_id')
+
+
+class ServiceAccountDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceAccountData
+        fields = ('service_key', 'protected_key', 'phone_number', 'session_path')
+
+
+class ServiceAccountSerializer(serializers.ModelSerializer):
+    data = ServiceAccountDataSerializer()
+    groups = GroupSerializer(many=True, read_only=True)
+    platform_id = serializers.PrimaryKeyRelatedField(
+        queryset=Platform.objects.all(),
+        source='platform'
+    )
+
+    def create(self, validated_data):
+        data = validated_data.pop('data')
+        service_account = ServiceAccount.objects.create(**validated_data)
+        ServiceAccountData.objects.create(account=service_account, **data)
+        return service_account
+
+    class Meta:
+        model = ServiceAccount
+        fields = ('id', 'name', 'platform_id', 'data', 'groups')
+
+
+class UserSocialDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('tg_link', 'vk_link')
