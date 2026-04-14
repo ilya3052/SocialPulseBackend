@@ -38,3 +38,40 @@ class EmailActivate(models.Model):
     token = models.CharField(max_length=64, unique=True)
     expires_at = models.DateTimeField(default=default_expires_at)
 
+
+# после завершения аккаунтов модели будут вынесены в отдельное приложение
+
+class Platform(models.Model):
+    alias = models.CharField(max_length=16, db_index=True)
+    name = models.CharField(max_length=128)
+
+
+class Group(models.Model):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["external_id", "platform"],
+                name='uq_group_platform_external'
+            )
+        ]
+
+    name = models.CharField(max_length=128)
+    link = models.CharField(max_length=256)
+    external_id = models.BigIntegerField(db_index=True)
+    added_at = models.DateTimeField(default=default_expires_at)
+    platform = models.ForeignKey('Platform', on_delete=models.CASCADE)
+    user = models.ManyToManyField('CustomUser')
+    service_account = models.ForeignKey('ServiceAccount', on_delete=models.SET_NULL, null=True, related_name='groups')
+
+
+class ServiceAccount(models.Model):
+    name = models.CharField(max_length=128)
+    platform = models.ForeignKey('Platform', on_delete=models.CASCADE)
+
+
+class ServiceAccountData(models.Model):
+    service_key = models.CharField(max_length=256, blank=True, null=True)
+    protected_key = models.CharField(max_length=256, blank=True, null=True)
+    phone_number = models.CharField(max_length=16, blank=True, null=True)
+    session_path = models.CharField(max_length=256, blank=True, null=True)
+    account = models.OneToOneField('ServiceAccount', on_delete=models.CASCADE, related_name='data')
