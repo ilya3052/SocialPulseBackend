@@ -166,8 +166,8 @@ class TelegramBindingView(generics.UpdateAPIView):
 class TelegramCallbackView(APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request, *args, **kwargs):
-        data = request.data
+    def get(self, request, *args, **kwargs):
+        data = request.GET.dict()
         str_data = {k: str(v) for k, v in data.items()}
         try:
             is_valid = verify_telegram_authentication(
