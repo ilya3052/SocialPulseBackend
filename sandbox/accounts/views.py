@@ -1,6 +1,7 @@
 import json
 from smtplib import SMTPException
 
+import requests
 from django.contrib.auth import get_user_model
 from django.contrib.sites import requests
 from django.core.mail import send_mail
@@ -9,19 +10,20 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_telegram_login.authentication import verify_telegram_authentication
 from django_telegram_login.errors import NotTelegramDataError, TelegramDataIsOutdatedError
-from rest_framework import status, generics
+from icecream import ic
+from rest_framework import status, generics, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-import requests
-
 from sandbox import settings
 from .logger import setup_logger
-from .models import TelegramToken, CustomUser, EmailActivate, VKTokens
+from .models import TelegramToken, CustomUser, EmailActivate, VKTokens, Group, Platform, ServiceAccount
+from .permissions import IsAdminOrReadOnly
 from .serializers import CustomUserSerializer, UserRegisterSerializer, TelegramTokenPairSerializer, \
-    UserPasswordSerializer, TelegramBindingSerializer, UserSetPasswordSerializer
+    UserPasswordSerializer, TelegramBindingSerializer, UserSetPasswordSerializer, GroupSerializer, PlatformSerializer, \
+    UserSocialDataSerializer, ServiceAccountSerializer
 from .utils import generate_short_token, prepare_message, try_parse_json
 
 User: CustomUser = get_user_model()
