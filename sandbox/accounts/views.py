@@ -422,3 +422,63 @@ class DebugView(APIView):
         logger.debug("Incoming request data:\n%s", formatted_json)
 
         return Response({"status": "ok"}, status=status.HTTP_200_OK)
+
+
+class GroupsView(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = GroupSerializer
+
+    def get_queryset(self):
+        return Group.objects.filter(user=self.request.user)
+
+
+class PlatformsView(viewsets.ModelViewSet):
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = Platform.objects.all()
+    serializer_class = PlatformSerializer
+
+
+class UserSocialDataView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        serializer = UserSocialDataSerializer(self.request.user, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def get_account_with_minimum_loaded(accounts) -> ServiceAccount:
+    stats = [(account, len(account.groups.all())) for account in accounts]
+    return min(
+        stats,
+        key=lambda item: (item[1], item[0].name)
+    )[0]
+
+
+class ServiceAccountsView(APIView):
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get(self, request, *args, **kwargs):
+        platform = (request.GET.dict()).get('platform')
+        accounts = ServiceAccount.objects.filter(platform__alias=platform).prefetch_related('groups')
+
+        account = get_account_with_minimum_loaded(accounts)
+
+        serializer = ServiceAccountSerializer(account)
+        data = serializer.data
+        return Response({"name": data.get('name'), "id": data.get('id')}, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ServiceAccountSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CheckGroupAccessView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, *args, **kwargs):
+        ic(request.data)
+        return Response(status=status.HTTP_200_OK)
