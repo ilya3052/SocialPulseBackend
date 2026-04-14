@@ -1,8 +1,8 @@
 from django.contrib.auth.password_validation import validate_password
-from icecream import ic
 from rest_framework import serializers
 
-from accounts.models import CustomUser, TelegramToken, EmailActivate
+from accounts.models import CustomUser, TelegramToken, EmailActivate, Platform, Group, ServiceAccount, \
+    ServiceAccountData
 from accounts.utils import generate_short_token
 
 
@@ -44,7 +44,8 @@ class TelegramTokenPairSerializer(serializers.Serializer):
 
         TelegramToken.objects.filter(user=user).delete()
 
-        token_pair = TelegramToken.objects.create(user=user, access_token=access_token, refresh_token=refresh_token, short_token=short_token)
+        token_pair = TelegramToken.objects.create(user=user, access_token=access_token, refresh_token=refresh_token,
+                                                  short_token=short_token)
         return token_pair
 
 
@@ -66,6 +67,7 @@ class UserPasswordSerializer(serializers.Serializer):
 
         return data
 
+
 class UserSetPasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(style={'input_type': 'password'}, write_only=True, required=True)
     confirm_password = serializers.CharField(style={'input_type': 'password'}, write_only=True, required=True)
@@ -81,6 +83,7 @@ class UserSetPasswordSerializer(serializers.Serializer):
 
         validate_password(data['new_password'])
         return data
+
 
 class TelegramBindingSerializer(serializers.Serializer):
     tg_id = serializers.CharField(write_only=True, allow_null=True, allow_blank=True)
