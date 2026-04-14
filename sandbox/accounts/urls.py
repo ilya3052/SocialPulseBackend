@@ -4,7 +4,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from accounts.serializers import UserPasswordSerializer
 from accounts.views import UserAPIView, TelegramCallbackView, UserAPIRegistration, TelegramTokenPairView, \
     TelegramConvertTokenView, UserChangePasswordView, TelegramBindingView, EmailActivationView, EmailSendMessageView, \
-    VKCallbackView, DebugView, VKCallbackUser, UserSetPasswordView
+    VKCallbackView, DebugView, VKCallbackUser, UserSetPasswordView, GroupsView, PlatformsView, UserSocialDataView, \
+    ServiceAccountsView, CheckGroupAccessView
 
 urlpatterns = [
 
@@ -35,4 +36,10 @@ urlpatterns = [
 
     path('debug/', DebugView.as_view(), name='error'),
 
+    # после завершения перенести в другое приложение аналогично моделям сериализаторам и вьюхам
+    path('groups/', GroupsView.as_view({"get": "list", "post": "create"}), name='groups'),
+    path('platforms/', PlatformsView.as_view({"get": "list", "post": "create"}), name='platforms'),
+    path('users/get-social/', UserSocialDataView.as_view(), name='user-social-data'),
+    path('service-account/', ServiceAccountsView.as_view(), name='add-service-account'),
+    path('group/check-access/', CheckGroupAccessView.as_view(), name='check-group-access')
 ]
