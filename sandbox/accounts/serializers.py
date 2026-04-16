@@ -156,7 +156,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ('name', 'link', 'external_id', 'added_at',
+        fields = ('id', 'name', 'link', 'external_id', 'added_at',
                   'platform_id', 'platform',
                   'user', 'user_id',
                   'service_account_id')
