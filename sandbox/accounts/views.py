@@ -3,14 +3,12 @@ from smtplib import SMTPException
 
 import requests
 from django.contrib.auth import get_user_model
-from django.contrib.sites import requests
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_telegram_login.authentication import verify_telegram_authentication
 from django_telegram_login.errors import NotTelegramDataError, TelegramDataIsOutdatedError
-from icecream import ic
 from rest_framework import status, generics, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -19,12 +17,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from sandbox import settings
 from .logger import setup_logger
-from .models import TelegramToken, CustomUser, EmailActivate, VKTokens, Group, Platform, ServiceAccount
+from .models import TelegramToken, CustomUser, EmailActivate, VKTokens, Group, Platform, ServiceAccount, \
+    ServiceAccountData
 from .permissions import IsAdminOrReadOnly
 from .serializers import CustomUserSerializer, UserRegisterSerializer, TelegramTokenPairSerializer, \
     UserPasswordSerializer, TelegramBindingSerializer, UserSetPasswordSerializer, GroupSerializer, PlatformSerializer, \
     UserSocialDataSerializer, ServiceAccountSerializer
-from .utils import generate_short_token, prepare_message, try_parse_json
+from .utils import generate_short_token, prepare_message, try_parse_json, Status
 
 User: CustomUser = get_user_model()
 
@@ -493,6 +492,7 @@ class ServiceAccountsView(APIView):
 
 class CheckGroupAccessView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         internal_data = request.data
 
@@ -523,7 +523,8 @@ class CheckGroupAccessView(APIView):
             res_data = req.json()
 
             if 'error' in res_data:
-                return Response({"msg": res_data['error']['error_msg'], "status": Status.Error}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"msg": res_data['error']['error_msg'], "status": Status.Error},
+                                status=status.HTTP_400_BAD_REQUEST)
 
             group = res_data.get('response').get('groups')[0]
             group_name = group.get('name')
@@ -531,12 +532,15 @@ class CheckGroupAccessView(APIView):
             contacts = group.get('contacts', None)
 
             if not contacts:
-                return Response({"group_name": group_name, "group_id": group_id, "status": Status.ContactsNotFound}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"group_name": group_name, "group_id": group_id, "status": Status.ContactsNotFound},
+                                status=status.HTTP_404_NOT_FOUND)
 
             for contact in contacts:
                 print(contact)
                 if vk_id == str(contact.get('user_id')):
-                    return Response({"group_name": group_name, "group_id": group_id, "status": Status.Accepted}, status=status.HTTP_200_OK)
-            return Response({"group_name": group_name, "group_id": group_id, "status": Status.Unaccepted}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                    return Response({"group_name": group_name, "group_id": group_id, "status": Status.Accepted},
+                                    status=status.HTTP_200_OK)
+            return Response({"group_name": group_name, "group_id": group_id, "status": Status.Unaccepted},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
             return Response(req.json(), status=req.status_code)

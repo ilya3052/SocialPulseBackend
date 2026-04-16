@@ -1,7 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView, TokenBlacklistView
 
-from accounts.serializers import UserPasswordSerializer
 from accounts.views import UserAPIView, TelegramCallbackView, UserAPIRegistration, TelegramTokenPairView, \
     TelegramConvertTokenView, UserChangePasswordView, TelegramBindingView, EmailActivationView, EmailSendMessageView, \
     VKCallbackView, DebugView, VKCallbackUser, UserSetPasswordView, GroupsView, PlatformsView, UserSocialDataView, \

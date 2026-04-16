@@ -1,6 +1,6 @@
+import json
 import logging
 import os
-import json
 from datetime import datetime
 
 
@@ -49,11 +49,10 @@ class HtmlDebugFileHandler(logging.FileHandler):
 
 
 def setup_logger(
-    name: str = "app_logger",
-    log_file: str = "debug.log",
-    level: int = logging.DEBUG,
+        name: str = "app_logger",
+        log_file: str = "debug.log",
+        level: int = logging.DEBUG,
 ) -> logging.Logger:
-
     logger = logging.getLogger(name)
     logger.setLevel(level)
 

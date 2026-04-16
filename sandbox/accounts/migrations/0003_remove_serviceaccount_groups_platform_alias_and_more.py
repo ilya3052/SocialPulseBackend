@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('accounts', '0002_group_service_account_group_user'),
     ]
@@ -24,6 +23,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='group',
             name='service_account',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='groups', to='accounts.serviceaccount'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='groups',
+                                    to='accounts.serviceaccount'),
         ),
     ]
