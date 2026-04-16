@@ -433,6 +433,17 @@ class GroupsView(viewsets.ModelViewSet):
     def get_queryset(self):
         return Group.objects.filter(user=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data['user_id'] = [self.request.user.id]
+
+        serializer = self.get_serializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        self.perform_create(serializer)
+        return Response(status=status.HTTP_201_CREATED)
+
 
 class PlatformsView(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
