@@ -475,9 +475,10 @@ class ServiceAccountsView(APIView):
     def get(self, request, *args, **kwargs):
         platform = (request.GET.dict()).get('platform')
         accounts = ServiceAccount.objects.filter(platform__alias=platform).prefetch_related('groups')
-
-        account = get_account_with_minimum_loaded(accounts)
-
+        try:
+            account = get_account_with_minimum_loaded(accounts)
+        except ValueError as VE:
+            return Response(VE, status=status.HTTP_400_BAD_REQUEST)
         serializer = ServiceAccountSerializer(account)
         data = serializer.data
         return Response({"name": data.get('name'), "id": data.get('id')}, status=status.HTTP_200_OK)
