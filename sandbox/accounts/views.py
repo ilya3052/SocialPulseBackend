@@ -494,5 +494,49 @@ class ServiceAccountsView(APIView):
 class CheckGroupAccessView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
-        ic(request.data)
-        return Response(status=status.HTTP_200_OK)
+        internal_data = request.data
+
+        group_link = internal_data.get('groupLink')
+        screen_name = group_link.split('/')[-1]
+        vk_id = internal_data.get('vk_id')
+        service_account_id = internal_data.get('serviceAccount')
+
+        service_account: ServiceAccount = ServiceAccount.objects.get(pk=service_account_id)
+        data: ServiceAccountData = service_account.data
+        service_key = data.service_key
+
+        params = {
+            'group_id': screen_name,
+            'fields': 'contacts',
+            'v': 5.199
+        }
+        headers = {
+            'Authorization': f'Bearer {service_key}',
+        }
+
+        req = requests.get(
+            'https://api.vk.ru/method/groups.getById',
+            headers=headers,
+            params=params
+        )
+        if req.status_code == 200:
+            res_data = req.json()
+
+            if 'error' in res_data:
+                return Response({"msg": res_data['error']['error_msg'], "status": Status.Error}, status=status.HTTP_400_BAD_REQUEST)
+
+            group = res_data.get('response').get('groups')[0]
+            group_name = group.get('name')
+            group_id = group.get('id')
+            contacts = group.get('contacts', None)
+
+            if not contacts:
+                return Response({"group_name": group_name, "group_id": group_id, "status": Status.ContactsNotFound}, status=status.HTTP_404_NOT_FOUND)
+
+            for contact in contacts:
+                print(contact)
+                if vk_id == str(contact.get('user_id')):
+                    return Response({"group_name": group_name, "group_id": group_id, "status": Status.Accepted}, status=status.HTTP_200_OK)
+            return Response({"group_name": group_name, "group_id": group_id, "status": Status.Unaccepted}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            return Response(req.json(), status=req.status_code)
