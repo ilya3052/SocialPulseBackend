@@ -38,6 +38,7 @@ urlpatterns = [
 
     # после завершения перенести в другое приложение аналогично моделям сериализаторам и вьюхам
     path('groups/', GroupsView.as_view({"get": "list", "post": "create"}), name='groups'),
+    path('groups/<int:pk>', GroupsView.as_view({"delete": "destroy"}), name='groups'),
     path('platforms/', PlatformsView.as_view({"get": "list", "post": "create"}), name='platforms'),
     path('users/get-social/', UserSocialDataView.as_view(), name='user-social-data'),
     path('service-account/', ServiceAccountsView.as_view(), name='add-service-account'),
