@@ -30,6 +30,9 @@ SECRET_KEY = 'django-insecure-m_k^$fp4d2yh5a#i=^2yg=*m2f5f%88ot6q1fmf8^%g*5pvlbs
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = [
+    'https://socialpulse.sandbox.com',
+]
 
 # Application definition
 
