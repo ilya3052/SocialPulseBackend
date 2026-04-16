@@ -1,5 +1,14 @@
 import json
 import secrets
+from enum import IntEnum
+
+
+class Status(IntEnum):
+    Accepted = 0
+    Unaccepted = 1
+    ContactsNotFound = 2
+    Error = 3
+
 
 def generate_short_token() -> str:
     url_token = secrets.token_urlsafe(48)
