@@ -34,3 +34,11 @@ def try_parse_json(value):
         except json.JSONDecodeError:
             return value
     return value
+
+def get_tg_api_session(session_path):
+    try:
+        tg_api = TelegramClient(api_id=int(os.getenv("API_ID")), api_hash=os.getenv("API_HASH"), session=session_path)
+        return tg_api
+    except Exception as e:
+        print(f"Ошибка создания TelegramClient: {e}")
+        return None
