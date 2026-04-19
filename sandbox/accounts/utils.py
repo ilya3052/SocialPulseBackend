@@ -1,6 +1,10 @@
 import json
 import secrets
-from enum import IntEnum
+from enum import IntEnum, Enum
+from typing import Union
+
+from telethon import TelegramClient
+import os
 
 
 class Status(IntEnum):
