@@ -2,6 +2,7 @@ import json
 from smtplib import SMTPException
 
 import requests
+from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db import IntegrityError
@@ -14,6 +15,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from telethon import TelegramClient
+from telethon.tl.types import Channel
 
 from sandbox import settings
 from .logger import setup_logger
@@ -23,12 +26,93 @@ from .permissions import IsAdminOrReadOnly
 from .serializers import CustomUserSerializer, UserRegisterSerializer, TelegramTokenPairSerializer, \
     UserPasswordSerializer, TelegramBindingSerializer, UserSetPasswordSerializer, GroupSerializer, PlatformSerializer, \
     UserSocialDataSerializer, ServiceAccountSerializer
-from .utils import generate_short_token, prepare_message, try_parse_json, Status
+from .utils import generate_short_token, prepare_message, try_parse_json, Status, Platforms, get_tg_api_session
 
 User: CustomUser = get_user_model()
 
 logger = setup_logger(log_file="sandbox/logs/debug.log")
 
+def check_vk_access(internal_data):
+    group_link = internal_data.get('groupLink')
+    screen_name = group_link.split('/')[-1]
+    vk_id = internal_data.get('vk_id')
+    service_account_id = internal_data.get('serviceAccount')
+
+    service_account: ServiceAccount = ServiceAccount.objects.get(pk=service_account_id)
+    data: ServiceAccountData = service_account.data
+    service_key = data.service_key
+
+    params = {
+        'group_id': screen_name,
+        'fields': 'contacts',
+        'v': 5.199
+    }
+    headers = {
+        'Authorization': f'Bearer {service_key}',
+    }
+
+    req = requests.get(
+        'https://api.vk.ru/method/groups.getById',
+        headers=headers,
+        params=params
+    )
+    if req.status_code == 200:
+        res_data = req.json()
+
+        if 'error' in res_data:
+            return {"msg": res_data['error']['error_msg'], "status": Status.Error}, status.HTTP_400_BAD_REQUEST
+
+        group = res_data.get('response').get('groups')[0]
+        group_name = group.get('name')
+        group_id = group.get('id')
+        contacts = group.get('contacts', None)
+
+        if not contacts:
+            return ({"group_name": group_name, "group_id": group_id,
+                     "status": Status.ContactsNotFound}, status.HTTP_404_NOT_FOUND)
+
+        for contact in contacts:
+            if vk_id == str(contact.get('user_id')):
+                return {"group_name": group_name, "group_id": group_id, "status": Status.Accepted}, status.HTTP_200_OK
+        return ({"group_name": group_name, "group_id": group_id,
+                 "status": Status.Unaccepted}, status.HTTP_406_NOT_ACCEPTABLE)
+    else:
+        return req.json(), req.status_code
+
+
+@async_to_sync
+async def check_tg_access(internal_data):
+    group_link = internal_data.get('groupLink')
+    screen_name = group_link.split('/')[-1]
+    service_account_id = internal_data.get('serviceAccount')
+
+    service_account = await sync_to_async(
+        lambda: ServiceAccount.objects.select_related('data').get(pk=service_account_id)
+    )()
+    data: ServiceAccountData = service_account.data
+    api: TelegramClient = get_tg_api_session(data.session_path)
+    async with api:
+        try:
+            channel: Channel = await api.get_entity(screen_name)
+            perm = await api.get_permissions(channel, 'me')
+        except ValueError as VE:
+            return {"msg": str(VE), "status": Status.Error}, status.HTTP_400_BAD_REQUEST
+        except Exception as E:
+            return {"msg": str(E), "status": Status.Error}, status.HTTP_400_BAD_REQUEST
+
+    is_admin = perm.is_admin
+
+    if is_admin:
+        return {"group_name": channel.title, "group_id": channel.id, "status": Status.Accepted}, status.HTTP_200_OK
+
+    return ({"group_name": channel.title, "group_id": channel.id,
+             "status": Status.Unaccepted}, status.HTTP_406_NOT_ACCEPTABLE)
+
+
+check_access_function = {
+    Platforms.VK: check_vk_access,
+    Platforms.TG: check_tg_access
+}
 
 class UserAPIRegistration(APIView):
     permission_classes = [AllowAny]
@@ -494,53 +578,11 @@ class CheckGroupAccessView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        internal_data = request.data
+        internal_data: dict = request.data
 
-        group_link = internal_data.get('groupLink')
-        screen_name = group_link.split('/')[-1]
-        vk_id = internal_data.get('vk_id')
-        service_account_id = internal_data.get('serviceAccount')
+        platform_alias = internal_data.get('platform')
+        platform = Platforms(platform_alias)
 
-        service_account: ServiceAccount = ServiceAccount.objects.get(pk=service_account_id)
-        data: ServiceAccountData = service_account.data
-        service_key = data.service_key
-
-        params = {
-            'group_id': screen_name,
-            'fields': 'contacts',
-            'v': 5.199
-        }
-        headers = {
-            'Authorization': f'Bearer {service_key}',
-        }
-
-        req = requests.get(
-            'https://api.vk.ru/method/groups.getById',
-            headers=headers,
-            params=params
-        )
-        if req.status_code == 200:
-            res_data = req.json()
-
-            if 'error' in res_data:
-                return Response({"msg": res_data['error']['error_msg'], "status": Status.Error},
-                                status=status.HTTP_400_BAD_REQUEST)
-
-            group = res_data.get('response').get('groups')[0]
-            group_name = group.get('name')
-            group_id = group.get('id')
-            contacts = group.get('contacts', None)
-
-            if not contacts:
-                return Response({"group_name": group_name, "group_id": group_id, "status": Status.ContactsNotFound},
-                                status=status.HTTP_404_NOT_FOUND)
-
-            for contact in contacts:
-                print(contact)
-                if vk_id == str(contact.get('user_id')):
-                    return Response({"group_name": group_name, "group_id": group_id, "status": Status.Accepted},
-                                    status=status.HTTP_200_OK)
-            return Response({"group_name": group_name, "group_id": group_id, "status": Status.Unaccepted},
-                            status=status.HTTP_406_NOT_ACCEPTABLE)
-        else:
-            return Response(req.json(), status=req.status_code)
+        result, status_code = check_access_function.get(platform)(internal_data)
+        print(result, status_code)
+        return Response(result, status_code)
