@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from telethon import TelegramClient
 from telethon.tl.types import Channel
+import threading
 
 from sandbox import settings
 from .logger import setup_logger
@@ -435,6 +436,17 @@ class TelegramConvertTokenView(APIView):
             "refresh": refresh,
         }, status=status.HTTP_200_OK)
 
+def send_confirmation_email(message, email):
+    try:
+        send_mail(
+            subject="Подтверждение электронной почты",
+            message="",
+            html_message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False)
+    except Exception:
+        raise
 
 class EmailSendMessageView(APIView):
     permission_classes = [IsAuthenticated]
@@ -455,13 +467,11 @@ class EmailSendMessageView(APIView):
         EmailActivate.objects.create(user=user, token=token)
 
         try:
-            send_mail(
-                subject="Подтверждение электронной почты",
-                message="",
-                html_message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                fail_silently=False)
+            threading.Thread(
+                target=send_confirmation_email,
+                args=(message, email),
+                daemon=True
+            ).start()
         except SMTPException as smtp:
             return Response({"smtp_error": smtp})
         return Response({"status": "Письмо с подтверждением отправлено"}, status=status.HTTP_200_OK)
