@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
-from sandbox import settings
+from src.SocialPulse import settings
 
 
 def default_expires_at():

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from admin_panel.models import Platform, ServiceAccountData, ServiceAccount
+from src.admin_panel import Platform, ServiceAccountData, ServiceAccount
 
 
 class PlatformSerializer(serializers.ModelSerializer):
@@ -30,7 +30,7 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
         return service_account
 
     def get_groups(self, obj):
-        from accounts.serializers import GroupSerializer
+        from src.accounts.serializers import GroupSerializer
         groups = obj.groups.all()
         serializer = GroupSerializer(groups, many=True, context=self.context)
         return serializer.data

@@ -1,12 +1,11 @@
 from django.db.models.aggregates import Count
-from icecream import ic
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from admin_panel.models import Platform, ServiceAccount
-from admin_panel.permissions import IsAdminOrReadOnly, ReadOnly
-from admin_panel.serializers import PlatformSerializer, ServiceAccountSerializer
+from src.admin_panel import Platform, ServiceAccount
+from src.admin_panel.permissions import IsAdminOrReadOnly, ReadOnly
+from src.admin_panel.serializers import PlatformSerializer, ServiceAccountSerializer
 
 
 class PlatformsView(viewsets.ModelViewSet):
@@ -31,9 +30,13 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         serializer = ServiceAccountSerializer(account, many=True)
 
         data = serializer.data
-        for d in data:
-            ic(d)
-        return Response( status=status.HTTP_200_OK)
+        return Response([
+            {
+                "id": account_data.get('id'),
+                "name": account_data.get('name'),
+                "platform": account_data.get('platform_id'),
+            } for account_data in data
+        ], status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         account = (
@@ -49,7 +52,7 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         data = serializer.data
         return Response({"name": data.get('name'), "id": data.get('id')}, status=status.HTTP_200_OK)
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         serializer = ServiceAccountSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
