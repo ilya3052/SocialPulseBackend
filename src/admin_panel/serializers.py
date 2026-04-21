@@ -16,6 +16,13 @@ class ServiceAccountDataSerializer(serializers.ModelSerializer):
 
 
 class ServiceAccountSerializer(serializers.ModelSerializer):
+    def get_fields(self):
+        fields = super().get_fields()
+        exclude_fields = self.context.get('exclude_fields', [])
+        for field in exclude_fields:
+            fields.pop(field, None)
+        return fields
+
     data = ServiceAccountDataSerializer()
 
     groups = serializers.SerializerMethodField(read_only=True)
