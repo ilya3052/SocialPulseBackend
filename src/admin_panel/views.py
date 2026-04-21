@@ -37,6 +37,15 @@ class ServiceAccountsView(viewsets.ModelViewSet):
             .order_by('name', 'groups_count')
         ).first()
 
+        context = {
+            'exclude_fields': [
+                'platform_id', 'data', 'groups', 'groups_count'
+            ]
+        }
+
+        serializer = ServiceAccountSerializer(account, context=context)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def list(self, request, *args, **kwargs):
         accounts = (
             ServiceAccount.objects.all()
