@@ -9,6 +9,7 @@ class IsAdminOrReadOnly(BasePermission):
              request.user.is_staff)
         )
 
+
 class ReadOnly(BasePermission):
     def has_permission(self, request, view):
         return bool(request.method in SAFE_METHODS)

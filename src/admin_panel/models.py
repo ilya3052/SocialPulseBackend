@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Platform(models.Model):
     alias = models.CharField(max_length=16, db_index=True)
     name = models.CharField(max_length=128)

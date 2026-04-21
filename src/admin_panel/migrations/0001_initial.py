@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -36,7 +35,8 @@ class Migration(migrations.Migration):
                 ('protected_key', models.CharField(blank=True, max_length=256, null=True)),
                 ('phone_number', models.CharField(blank=True, max_length=16, null=True)),
                 ('session_path', models.CharField(blank=True, max_length=256, null=True)),
-                ('account', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='data', to='admin_panel.serviceaccount')),
+                ('account', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='data',
+                                                 to='admin_panel.serviceaccount')),
             ],
         ),
     ]
