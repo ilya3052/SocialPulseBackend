@@ -1,12 +1,14 @@
 from django.db.models.aggregates import Count
-from icecream import ic
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from admin_panel.models import Platform, ServiceAccount
-from admin_panel.permissions import IsAdminOrReadOnly, ReadOnly
+from admin_panel.permissions import IsAdminOrReadOnly
 from admin_panel.serializers import PlatformSerializer, ServiceAccountSerializer
+from admin_panel.utils import get_group_aggregated_info, get_service_accounts_aggregated_info, \
+    get_service_accounts_loading
 
 
 class PlatformsView(viewsets.ModelViewSet):
@@ -17,27 +19,6 @@ class PlatformsView(viewsets.ModelViewSet):
 
 class ServiceAccountsView(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
-
-    def list(self, request, *args, **kwargs):
-        account = (
-            ServiceAccount.objects.all()
-            .prefetch_related('groups')
-            .annotate(
-                groups_count=Count('groups')
-            )
-            .order_by('name', 'groups_count')
-        )
-
-        serializer = ServiceAccountSerializer(account, many=True)
-
-        data = serializer.data
-        return Response([
-            {
-                "id": account_data.get('id'),
-                "name": account_data.get('name'),
-                "platform": account_data.get('platform_id'),
-            } for account_data in data
-        ], status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         account = (
@@ -61,42 +42,22 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class LoadingOnServiceAccounts(APIView):
-    permission_classes = [ReadOnly]
+class SummaryAdminPanelView(APIView):
+    permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        accounts = (
-            ServiceAccount.objects.all()
-            .prefetch_related('groups')
-            .annotate(
-                groups_count=Count('groups')
-            )
-        )
+        group_data_request = get_group_aggregated_info()
+        service_account_data_request = get_service_accounts_aggregated_info()
+        service_account_loading_request = get_service_accounts_loading()
 
-        min_l_acc = accounts.order_by('groups_count', 'name').first()
-        max_l_acc = accounts.order_by('-groups_count', '-name').first()
-
-
-        min_l_acc_serializer = ServiceAccountSerializer(min_l_acc)
-        min_l_acc_serializer_data = min_l_acc_serializer.data
-
-        max_l_acc_serializer = ServiceAccountSerializer(max_l_acc)
-        max_l_acc_serializer_data = max_l_acc_serializer.data
-
-        return Response(
-            {
-                "min": {
-                    "id": min_l_acc_serializer_data.get('id'),
-                    "name": min_l_acc_serializer_data.get('name'),
-                    "count": min_l_acc_serializer_data.get('groups_count')
-                },
-                "max": {
-                    "id": max_l_acc_serializer_data.get('id'),
-                    "name": max_l_acc_serializer_data.get('name'),
-                    "count": max_l_acc_serializer_data.get('groups_count')
-                }
-            }, status=status.HTTP_200_OK)
-
-
-class SummaryAdminPanelView(APIView):
-    pass
+        return Response({
+            "group_info": {
+                **group_data_request,
+            },
+            "service_account_info": {
+                **service_account_data_request,
+            },
+            "service_account_loading_info": {
+                **service_account_loading_request
+            }
+        }, status=status.HTTP_200_OK)
