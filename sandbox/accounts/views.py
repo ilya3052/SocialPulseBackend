@@ -29,13 +29,15 @@ from .utils import generate_short_token, prepare_message, try_parse_json, Status
 
 User: CustomUser = get_user_model()
 
-logger = setup_logger(log_file="sandbox/logs/debug.log")
+logger = setup_logger(log_file="src/logs/debug.log")
 
 
 def check_vk_access(internal_data):
+    print(internal_data)
+    from admin_panel.models import ServiceAccount
     group_link = internal_data.get('groupLink')
     screen_name = group_link.split('/')[-1]
-    vk_id = internal_data.get('vk_id')
+    vk_id = internal_data.get('user_social_id')
     service_account_id = internal_data.get('serviceAccount')
 
     service_account: ServiceAccount = ServiceAccount.objects.get(pk=service_account_id)
@@ -72,6 +74,7 @@ def check_vk_access(internal_data):
                      "status": Status.ContactsNotFound}, status.HTTP_404_NOT_FOUND)
 
         for contact in contacts:
+            print(contact, vk_id)
             if vk_id == str(contact.get('user_id')):
                 return {"group_name": group_name, "group_id": group_id, "status": Status.Accepted}, status.HTTP_200_OK
         return ({"group_name": group_name, "group_id": group_id,
@@ -555,6 +558,7 @@ class CheckGroupAccessView(APIView):
 
     def post(self, request, *args, **kwargs):
         internal_data: dict = request.data
+        print(internal_data)
 
         platform_alias = internal_data.get('platform')
         platform = Platforms(platform_alias)

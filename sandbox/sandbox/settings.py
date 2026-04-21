@@ -198,11 +198,8 @@ REST_FRAMEWORK = {
     ]
 }
 
-LOGIN_REDIRECT_URL = 'http://127.0.0.1/api/v1/accounts/users/me'
 
-TELEGRAM_BOT_NAME = "socialpulsesandboxbot"
-TELEGRAM_BOT_TOKEN = "8489648854:AAGPCAwpJSYAiq_4wffMMO17HdOzhAESEOQ"
-TELEGRAM_LOGIN_REDIRECT_URL = 'http://127.0.0.1/api/v1/accounts/tg/callback/'
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 CLIENT_ID = '54438538'
 
