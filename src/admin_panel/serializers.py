@@ -8,6 +8,7 @@ class PlatformSerializer(serializers.ModelSerializer):
         model = Platform
         fields = ('id', 'name', 'alias')
 
+
 class ServiceAccountDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceAccountData
@@ -16,8 +17,9 @@ class ServiceAccountDataSerializer(serializers.ModelSerializer):
 
 class ServiceAccountSerializer(serializers.ModelSerializer):
     data = ServiceAccountDataSerializer()
+
     groups = serializers.SerializerMethodField(read_only=True)
-    groups_count = serializers.IntegerField(read_only=True)
+
     platform_id = serializers.PrimaryKeyRelatedField(
         queryset=Platform.objects.all(),
         source='platform'
@@ -37,4 +39,4 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ServiceAccount
-        fields = ('id', 'name', 'platform_id', 'data', 'groups', 'groups_count')
+        fields = ('id', 'name', 'platform_id', 'data', 'groups')
