@@ -37,9 +37,23 @@ class ServiceAccountsView(viewsets.ModelViewSet):
             .order_by('name', 'groups_count')
         ).first()
 
-        serializer = ServiceAccountSerializer(account)
-        data = serializer.data
-        return Response({"name": data.get('name'), "id": data.get('id')}, status=status.HTTP_200_OK)
+    def list(self, request, *args, **kwargs):
+        accounts = (
+            ServiceAccount.objects.all()
+            .prefetch_related('groups')
+            .annotate(
+                groups_count=Count('groups')
+            )
+        )
+
+        context = {
+            'exclude_fields': [
+                'data', 'groups'
+            ]
+        }
+
+        serializer = ServiceAccountSerializer(accounts, many=True, context=context)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         serializer = ServiceAccountSerializer(data=request.data)
