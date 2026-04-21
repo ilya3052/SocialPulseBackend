@@ -1,11 +1,11 @@
 from django.db.models.aggregates import Count
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from admin_panel.models import Platform, ServiceAccount
-from admin_panel.permissions import IsAdminOrReadOnly
+from admin_panel.permissions import IsAdminOrReadOnly, ReadOnly
 from admin_panel.serializers import PlatformSerializer, ServiceAccountSerializer
 from admin_panel.utils import get_group_aggregated_info, get_service_accounts_aggregated_info, \
     get_service_accounts_loading
@@ -76,18 +76,18 @@ class SummaryAdminPanelView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        group_data_request = get_group_aggregated_info()
-        service_account_data_request = get_service_accounts_aggregated_info()
-        service_account_loading_request = get_service_accounts_loading()
+        group_data = get_group_aggregated_info()
+        service_account_data = get_service_accounts_aggregated_info()
+        service_account_loading = get_service_accounts_loading()
 
         return Response({
             "group_info": {
-                **group_data_request,
+                **group_data,
             },
             "service_account_info": {
-                **service_account_data_request,
+                **service_account_data,
             },
             "service_account_loading_info": {
-                **service_account_loading_request
+                **service_account_loading
             }
         }, status=status.HTTP_200_OK)
