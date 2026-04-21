@@ -21,17 +21,16 @@ import threading
 
 from sandbox import settings
 from .logger import setup_logger
-from .models import TelegramToken, CustomUser, EmailActivate, VKTokens, Group, Platform, ServiceAccount, \
-    ServiceAccountData
-from .permissions import IsAdminOrReadOnly
+from .models import TelegramToken, CustomUser, EmailActivate, VKTokens, Group
 from .serializers import CustomUserSerializer, UserRegisterSerializer, TelegramTokenPairSerializer, \
-    UserPasswordSerializer, TelegramBindingSerializer, UserSetPasswordSerializer, GroupSerializer, PlatformSerializer, \
-    UserSocialDataSerializer, ServiceAccountSerializer
+    UserPasswordSerializer, TelegramBindingSerializer, UserSetPasswordSerializer, GroupSerializer, \
+    UserSocialDataSerializer
 from .utils import generate_short_token, prepare_message, try_parse_json, Status, Platforms, get_tg_api_session
 
 User: CustomUser = get_user_model()
 
 logger = setup_logger(log_file="sandbox/logs/debug.log")
+
 
 def check_vk_access(internal_data):
     group_link = internal_data.get('groupLink')
@@ -114,6 +113,7 @@ check_access_function = {
     Platforms.VK: check_vk_access,
     Platforms.TG: check_tg_access
 }
+
 
 class UserAPIRegistration(APIView):
     permission_classes = [AllowAny]
@@ -436,6 +436,7 @@ class TelegramConvertTokenView(APIView):
             "refresh": refresh,
         }, status=status.HTTP_200_OK)
 
+
 def send_confirmation_email(message, email):
     try:
         send_mail(
@@ -447,6 +448,7 @@ def send_confirmation_email(message, email):
             fail_silently=False)
     except Exception:
         raise
+
 
 class EmailSendMessageView(APIView):
     permission_classes = [IsAuthenticated]
@@ -538,12 +540,6 @@ class GroupsView(viewsets.ModelViewSet):
         return Response(status=status.HTTP_201_CREATED)
 
 
-class PlatformsView(viewsets.ModelViewSet):
-    permission_classes = [IsAdminOrReadOnly]
-    queryset = Platform.objects.all()
-    serializer_class = PlatformSerializer
-
-
 class UserSocialDataView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -552,36 +548,6 @@ class UserSocialDataView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-def get_account_with_minimum_loaded(accounts) -> ServiceAccount:
-    stats = [(account, len(account.groups.all())) for account in accounts]
-    return min(
-        stats,
-        key=lambda item: (item[1], item[0].name)
-    )[0]
-
-
-class ServiceAccountsView(APIView):
-    permission_classes = [IsAdminOrReadOnly]
-
-    def get(self, request, *args, **kwargs):
-        platform = (request.GET.dict()).get('platform')
-        accounts = ServiceAccount.objects.filter(platform__alias=platform).prefetch_related('groups')
-        try:
-            account = get_account_with_minimum_loaded(accounts)
-        except ValueError as VE:
-            return Response(VE, status=status.HTTP_400_BAD_REQUEST)
-        serializer = ServiceAccountSerializer(account)
-        data = serializer.data
-        return Response({"name": data.get('name'), "id": data.get('id')}, status=status.HTTP_200_OK)
-
-    def post(self, request, *args, **kwargs):
-        serializer = ServiceAccountSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CheckGroupAccessView(APIView):

@@ -1,9 +1,9 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from accounts.models import CustomUser, TelegramToken, EmailActivate, Platform, Group, ServiceAccount, \
-    ServiceAccountData
+from accounts.models import CustomUser, TelegramToken, EmailActivate, Group
 from accounts.utils import generate_short_token
+from admin_panel.models import Platform, ServiceAccount
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -129,14 +129,10 @@ class EmailActivateSerializer(serializers.ModelSerializer):
 
 # после завершения перенести в другое приложение аналогично моделям
 
-class PlatformSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Platform
-        fields = ('id', 'name', 'alias')
-
 
 class GroupSerializer(serializers.ModelSerializer):
-    platform = PlatformSerializer(read_only=True)
+    platform = serializers.SerializerMethodField(read_only=True)
+
     platform_id = serializers.PrimaryKeyRelatedField(
         queryset=Platform.objects.all(),
         source='platform',
@@ -149,10 +145,18 @@ class GroupSerializer(serializers.ModelSerializer):
         many=True,
         write_only=True
     )
+
     service_account_id = serializers.PrimaryKeyRelatedField(
         queryset=ServiceAccount.objects.all(),
         source='service_account'
     )
+
+    def get_platform(self, obj: Group):
+        if not obj.platform:
+            return None
+        from admin_panel.serializers import PlatformSerializer
+        serializer = PlatformSerializer(obj.platform, context=self.context)
+        return serializer.data
 
     class Meta:
         model = Group
@@ -160,31 +164,6 @@ class GroupSerializer(serializers.ModelSerializer):
                   'platform_id', 'platform',
                   'user', 'user_id',
                   'service_account_id')
-
-
-class ServiceAccountDataSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ServiceAccountData
-        fields = ('service_key', 'protected_key', 'phone_number', 'session_path')
-
-
-class ServiceAccountSerializer(serializers.ModelSerializer):
-    data = ServiceAccountDataSerializer()
-    groups = GroupSerializer(many=True, read_only=True)
-    platform_id = serializers.PrimaryKeyRelatedField(
-        queryset=Platform.objects.all(),
-        source='platform'
-    )
-
-    def create(self, validated_data):
-        data = validated_data.pop('data')
-        service_account = ServiceAccount.objects.create(**validated_data)
-        ServiceAccountData.objects.create(account=service_account, **data)
-        return service_account
-
-    class Meta:
-        model = ServiceAccount
-        fields = ('id', 'name', 'platform_id', 'data', 'groups')
 
 
 class UserSocialDataSerializer(serializers.ModelSerializer):

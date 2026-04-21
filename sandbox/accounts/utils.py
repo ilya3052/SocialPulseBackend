@@ -1,10 +1,10 @@
 import json
+import os
 import secrets
 from enum import IntEnum, Enum
 from typing import Union
 
 from telethon import TelegramClient
-import os
 
 
 class Status(IntEnum):
@@ -12,6 +12,7 @@ class Status(IntEnum):
     Unaccepted = 1
     ContactsNotFound = 2
     Error = 3
+
 
 class Platforms(Enum):
     VK = (1, 'vk')
@@ -68,6 +69,7 @@ def try_parse_json(value):
         except json.JSONDecodeError:
             return value
     return value
+
 
 def get_tg_api_session(session_path):
     try:
