@@ -18,7 +18,14 @@ class PlatformsView(viewsets.ModelViewSet):
 
 
 class ServiceAccountsView(viewsets.ModelViewSet):
-    permission_classes = [IsAdminOrReadOnly]
+    def get_permissions(self):
+        if self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        elif self.action in ('list', 'create'):
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [ReadOnly]
+        return [permission() for permission in permission_classes]
 
     def retrieve(self, request, *args, **kwargs):
         account = (
