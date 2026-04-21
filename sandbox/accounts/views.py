@@ -19,7 +19,7 @@ from telethon import TelegramClient
 from telethon.tl.types import Channel
 import threading
 
-from src.SocialPulse import settings
+from sandbox import settings
 from .logger import setup_logger
 from .models import TelegramToken, CustomUser, EmailActivate, VKTokens, Group
 from .serializers import CustomUserSerializer, UserRegisterSerializer, TelegramTokenPairSerializer, \
@@ -33,8 +33,7 @@ logger = setup_logger(log_file="sandbox/logs/debug.log")
 
 
 def check_vk_access(internal_data):
-    print(internal_data)
-    from src.admin_panel import ServiceAccount
+    from admin_panel.models import ServiceAccount
     group_link = internal_data.get('groupLink')
     screen_name = group_link.split('/')[-1]
     vk_id = internal_data.get('user_social_id')

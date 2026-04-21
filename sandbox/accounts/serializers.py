@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from accounts.models import CustomUser, TelegramToken, EmailActivate, Group
 from accounts.utils import generate_short_token
-from src.admin_panel import Platform, ServiceAccount
+from admin_panel.models import Platform, ServiceAccount
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -154,7 +154,7 @@ class GroupSerializer(serializers.ModelSerializer):
     def get_platform(self, obj: Group):
         if not obj.platform:
             return None
-        from src.admin_panel.serializers import PlatformSerializer
+        from admin_panel.serializers import PlatformSerializer
         serializer = PlatformSerializer(obj.platform, context=self.context)
         return serializer.data
 

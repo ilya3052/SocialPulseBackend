@@ -1,4 +1,6 @@
-from src.admin_panel import ServiceAccount
+from icecream import ic
+
+from admin_panel.models import ServiceAccount
 
 
 def get_account_with_minimum_loaded(accounts) -> ServiceAccount:

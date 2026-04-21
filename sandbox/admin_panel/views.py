@@ -1,11 +1,12 @@
 from django.db.models.aggregates import Count
+from icecream import ic
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from src.admin_panel import Platform, ServiceAccount
-from src.admin_panel.permissions import IsAdminOrReadOnly, ReadOnly
-from src.admin_panel.serializers import PlatformSerializer, ServiceAccountSerializer
+from admin_panel.models import Platform, ServiceAccount
+from admin_panel.permissions import IsAdminOrReadOnly, ReadOnly
+from admin_panel.serializers import PlatformSerializer, ServiceAccountSerializer
 
 
 class PlatformsView(viewsets.ModelViewSet):

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from src.admin_panel.views import PlatformsView, ServiceAccountsView, SummaryAdminPanelView, LoadingOnServiceAccounts
+from admin_panel.views import PlatformsView, ServiceAccountsView, SummaryAdminPanelView, LoadingOnServiceAccounts
 
 urlpatterns = [
     path('platforms/', PlatformsView.as_view({"get": "list", "post": "create"}), name='platforms'),
