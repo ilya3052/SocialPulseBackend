@@ -1,3 +1,4 @@
+from icecream import ic
 from rest_framework import serializers
 
 from admin_panel.models import Platform, ServiceAccountData, ServiceAccount
@@ -45,6 +46,13 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
         serializer = GroupSerializer(groups, many=True, context=self.context)
         return serializer.data
 
+    def update(self, instance, validated_data):
+        instance.is_activated = validated_data.get('is_activated')
+        instance.save()
+        return instance
+
     class Meta:
         model = ServiceAccount
-        fields = ('id', 'name', 'platform_id', 'data', 'groups', 'groups_count')
+        fields = ('id', 'name', 'platform_id', 'is_activated', 'data', 'groups', 'groups_count')
+
+

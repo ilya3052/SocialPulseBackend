@@ -8,6 +8,7 @@ class Platform(models.Model):
 
 class ServiceAccount(models.Model):
     name = models.CharField(max_length=128)
+    is_activated = models.BooleanField(default=False)
     platform = models.ForeignKey('Platform', on_delete=models.CASCADE)
 
 

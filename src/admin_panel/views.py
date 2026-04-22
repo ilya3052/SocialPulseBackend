@@ -21,7 +21,7 @@ class ServiceAccountsView(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
-        elif self.action in ('list', 'create'):
+        elif self.action in ('list', 'create', 'partial_update'):
             permission_classes = [IsAdminUser]
         else:
             permission_classes = [ReadOnly]
@@ -62,6 +62,18 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         }
 
         serializer = ServiceAccountSerializer(accounts, many=True, context=context)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = ServiceAccount.objects.get(pk=self.kwargs.get('pk'))
+        if not instance:
+            return Response({"msg": "Объект не найден"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ServiceAccountSerializer(instance, data=request.data, partial=True)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
