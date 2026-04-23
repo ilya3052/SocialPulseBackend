@@ -1,19 +1,6 @@
-from django.db.models import Q
-from django.db.models.aggregates import Count
+from django.db.models import Count, Q
 
 from admin_panel.models import ServiceAccount
-
-
-def get_group_aggregated_info():
-    from accounts.models import Group
-    result = Group.objects.all().aggregate(
-        vk_count=Count('id', filter=Q(platform__alias='VK')),
-        tg_count=Count('id', filter=Q(platform__alias='TG')))
-
-    return {
-        "vk_count": result.get('vk_count'),
-        "tg_count": result.get('tg_count'),
-    }
 
 
 def get_service_accounts_aggregated_info():
@@ -25,7 +12,6 @@ def get_service_accounts_aggregated_info():
         "vk_count": result.get('vk_count'),
         "tg_count": result.get('tg_count'),
     }
-
 
 def get_service_accounts_loading():
     accounts = (

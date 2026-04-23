@@ -1,9 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from accounts.models import CustomUser, TelegramToken, EmailActivate, Group
-from accounts.utils import generate_short_token
-from admin_panel.models import Platform, ServiceAccount
+from accounts.models import CustomUser
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -25,28 +23,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         email = validated_data.pop('email')
         user = CustomUser.objects.create_user(**validated_data, password=password, email=email)
         return user
-
-
-class TelegramTokenPairSerializer(serializers.Serializer):
-    access_token = serializers.CharField(write_only=True, max_length=512)
-    refresh_token = serializers.CharField(write_only=True, max_length=512)
-
-    class Meta:
-        model = TelegramToken
-        fields = ('user', 'access_token', 'refresh_token')
-        read_only_fields = ('short_token',)
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        access_token = self.validated_data['access_token']
-        refresh_token = self.validated_data['refresh_token']
-        short_token = generate_short_token()
-
-        TelegramToken.objects.filter(user=user).delete()
-
-        token_pair = TelegramToken.objects.create(user=user, access_token=access_token, refresh_token=refresh_token,
-                                                  short_token=short_token)
-        return token_pair
 
 
 class UserPasswordSerializer(serializers.Serializer):
@@ -85,17 +61,6 @@ class UserSetPasswordSerializer(serializers.Serializer):
         return data
 
 
-class TelegramBindingSerializer(serializers.Serializer):
-    tg_id = serializers.CharField(write_only=True, allow_null=True, allow_blank=True)
-    tg_link = serializers.CharField(write_only=True, allow_null=True, allow_blank=True)
-
-    def update(self, instance, validated_data):
-        instance.tg_id = validated_data.get('tg_id', instance.tg_id)
-        instance.tg_link = validated_data.get('tg_link', instance.tg_link)
-        instance.save()
-        return instance
-
-
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -118,52 +83,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-
-
-class EmailActivateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EmailActivate
-        fields = ('user', 'token')
-        read_only_fields = ('user',)
-
-
-# после завершения перенести в другое приложение аналогично моделям
-
-
-class GroupSerializer(serializers.ModelSerializer):
-    platform = serializers.SerializerMethodField(read_only=True)
-
-    platform_id = serializers.PrimaryKeyRelatedField(
-        queryset=Platform.objects.all(),
-        source='platform',
-        write_only=True
-    )
-    user = CustomUserSerializer(read_only=True, many=True)  # а надо ли возвращать?
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(),
-        source='user',
-        many=True,
-        write_only=True
-    )
-
-    service_account_id = serializers.PrimaryKeyRelatedField(
-        queryset=ServiceAccount.objects.all(),
-        source='service_account'
-    )
-
-    def get_platform(self, obj: Group):
-        if not obj.platform:
-            return None
-        from admin_panel.serializers import PlatformSerializer
-        serializer = PlatformSerializer(obj.platform, context=self.context)
-        return serializer.data
-
-    class Meta:
-        model = Group
-        fields = ('id', 'name', 'link', 'external_id', 'added_at',
-                  'platform_id', 'platform',
-                  'user', 'user_id',
-                  'service_account_id')
 
 
 class UserSocialDataSerializer(serializers.ModelSerializer):

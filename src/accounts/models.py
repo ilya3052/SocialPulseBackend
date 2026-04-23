@@ -1,12 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils import timezone
 
-from SocialPulse import settings
-
-
-def default_expires_at():
-    return timezone.now() + settings.SHORT_TOKEN_LIFETIME
+from accounts.utils import default_expires_at
 
 
 class CustomUser(AbstractUser):
@@ -61,4 +56,3 @@ class Group(models.Model):
     user = models.ManyToManyField('CustomUser')
     service_account = models.ForeignKey('admin_panel.ServiceAccount', on_delete=models.SET_NULL, null=True,
                                         related_name='groups')
-

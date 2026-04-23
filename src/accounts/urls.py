@@ -3,7 +3,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from accounts.views import UserAPIView, TelegramCallbackView, UserAPIRegistration, TelegramTokenPairView, \
     TelegramConvertTokenView, UserChangePasswordView, TelegramBindingView, EmailActivationView, EmailSendMessageView, \
-    VKCallbackView, DebugView, VKCallbackUser, UserSetPasswordView, GroupsView, UserSocialDataView, CheckGroupAccessView
+    VKCallbackView, VKCallbackUser, UserSetPasswordView, UserSocialDataView, \
+    CheckGroupAccessView, GroupsView
 
 urlpatterns = [
 
@@ -31,8 +32,6 @@ urlpatterns = [
 
     path('email/send/', EmailSendMessageView.as_view(), name='email_send'),
     path('email/activate/', EmailActivationView.as_view(), name='email_activate'),
-
-    path('debug/', DebugView.as_view(), name='error'),
 
     # после завершения перенести в другое приложение аналогично моделям сериализаторам и вьюхам
     path('groups/', GroupsView.as_view({"get": "list", "post": "create"}), name='groups'),

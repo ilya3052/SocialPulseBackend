@@ -1,13 +1,6 @@
-from icecream import ic
 from rest_framework import serializers
 
-from admin_panel.models import Platform, ServiceAccountData, ServiceAccount
-
-
-class PlatformSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Platform
-        fields = ('id', 'name', 'alias')
+from admin_panel.models import ServiceAccountData, Platform, ServiceAccount
 
 
 class ServiceAccountDataSerializer(serializers.ModelSerializer):
@@ -54,5 +47,4 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceAccount
         fields = ('id', 'name', 'platform_id', 'is_activated', 'data', 'groups', 'groups_count')
-
 

@@ -12,5 +12,4 @@ urlpatterns = [
     path('service-accounts/<str:platform>/', ServiceAccountsView.as_view({"get": "retrieve"}),
          name='get-service-account'),
     path('service-accounts/', ServiceAccountsView.as_view({"post": "create"}), name='create-service-account'),
-
 ]

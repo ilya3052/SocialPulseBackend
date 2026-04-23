@@ -17,8 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from common.views import DebugView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('debug/', DebugView.as_view(), name='error'),
     path('api/v3/accounts/', include('accounts.urls')),
     path('api/v3/admin/', include('admin_panel.urls'))
 ]
