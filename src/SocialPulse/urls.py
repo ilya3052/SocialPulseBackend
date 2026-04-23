@@ -22,10 +22,10 @@ from common.views import DebugView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('debug/', DebugView.as_view(), name='error'),
-    path('api/v4/users/', include('users.urls')),
-    path('api/v4/auth/', include('social_auth.urls')),
-    path('api/v4/admin/', include('social_admin.urls')),
-    path('api/v4/service-accounts/', include('service_accounts.urls')),
-    path('api/v4/social-entities/', include('social_entities.urls')),
+    path('api/v4/users/', include('users.urls'), name='users'),
+    path('api/v4/auth/', include('social_auth.urls'), name='auth'),
+    path('api/v4/admin/', include('social_admin.urls'), name='admin-panel'),
+    path('api/v4/service-accounts/', include('service_accounts.urls'), name='service-accounts'),
+    path('api/v4/social-entities/', include('social_entities.urls'), name='social-entities'),
 
 ]
