@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from accounts.models import TelegramToken
-from accounts.utils import generate_short_token
+from social_auth.models import TelegramToken
+from social_auth.utils import generate_short_token
 
 
 class TelegramTokenPairSerializer(serializers.Serializer):

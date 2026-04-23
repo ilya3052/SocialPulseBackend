@@ -8,22 +8,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from SocialPulse import settings
-from accounts.models import CustomUser, EmailActivate
-from accounts.utils import generate_short_token, prepare_message
-
-
-def send_confirmation_email(message, email):
-    try:
-        send_mail(
-            subject="Подтверждение электронной почты",
-            message="",
-            html_message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False)
-    except Exception:
-        raise
+from social_auth.models import EmailActivate
+from social_auth.services import send_confirmation_email
+from social_auth.utils import generate_short_token, prepare_message
 
 
 class EmailSendMessageView(APIView):
@@ -33,7 +20,7 @@ class EmailSendMessageView(APIView):
         return self.request.user
 
     def get(self, request, *args, **kwargs):
-        user: CustomUser = self.get_object()
+        user = self.get_object()
         email = user.email
         token = generate_short_token()
         message = prepare_message(token)

@@ -8,9 +8,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from accounts.models import CustomUser, VKTokens
+from social_auth.models import VKTokens
 
-User: CustomUser = get_user_model()
+User = get_user_model()
 
 
 class VKCallbackView(APIView):

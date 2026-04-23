@@ -11,10 +11,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from SocialPulse import settings
-from accounts.models import CustomUser, TelegramToken
-from accounts.serializers import TelegramBindingSerializer, TelegramTokenPairSerializer
+from social_auth.models import TelegramToken
+from social_auth.serializers import TelegramBindingSerializer, TelegramTokenPairSerializer
 
-User: CustomUser = get_user_model()
+User = get_user_model()
 
 
 class TelegramBindingView(generics.UpdateAPIView):

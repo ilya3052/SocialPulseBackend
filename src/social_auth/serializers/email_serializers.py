@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from accounts.models import EmailActivate
+from social_auth.models import EmailActivate
 
 
 class EmailActivateSerializer(serializers.ModelSerializer):
