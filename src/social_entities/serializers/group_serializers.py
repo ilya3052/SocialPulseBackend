@@ -1,11 +1,13 @@
 from rest_framework import serializers
 
-from accounts.models import CustomUser, Group
-from .user_serializers import CustomUserSerializer
-from admin_panel.models import Platform, ServiceAccount
+from service_accounts.models import ServiceAccount
+from users.models import CustomUser
+from users.serializers import CustomUserSerializer
 
 
 class GroupSerializer(serializers.ModelSerializer):
+    from social_entities.models import Platform
+
     platform = serializers.SerializerMethodField(read_only=True)
 
     platform_id = serializers.PrimaryKeyRelatedField(
@@ -26,14 +28,17 @@ class GroupSerializer(serializers.ModelSerializer):
         source='service_account'
     )
 
-    def get_platform(self, obj: Group):
+    def get_platform(self, obj):
+        from social_entities.serializers import PlatformSerializer
+
         if not obj.platform:
             return None
-        from admin_panel.serializers import PlatformSerializer
         serializer = PlatformSerializer(obj.platform, context=self.context)
         return serializer.data
 
     class Meta:
+        from social_entities.models import Group
+
         model = Group
         fields = ('id', 'name', 'link', 'external_id', 'added_at',
                   'platform_id', 'platform',

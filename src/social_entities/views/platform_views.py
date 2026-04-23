@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 
-from admin_panel.models import Platform
-from admin_panel.permissions import IsAdminOrReadOnly
-from admin_panel.serializers import PlatformSerializer
+from social_entities.models import Platform
+from social_entities.permissions import IsAdminOrReadOnly
+from social_entities.serializers import PlatformSerializer
 
 
 class PlatformsView(viewsets.ModelViewSet):
