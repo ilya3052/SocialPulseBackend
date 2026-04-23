@@ -7,11 +7,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from accounts.models import CustomUser
-from accounts.serializers import UserRegisterSerializer, CustomUserSerializer, UserPasswordSerializer, \
+from users.serializers import UserRegisterSerializer, CustomUserSerializer, UserPasswordSerializer, \
     UserSetPasswordSerializer, UserSocialDataSerializer
 
-User: CustomUser = get_user_model()
+User = get_user_model()
 
 
 class UserAPIRegistration(APIView):
