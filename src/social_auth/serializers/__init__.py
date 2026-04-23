@@ -1,2 +1,2 @@
-from .tg_serializers import *
 from .email_serializers import *
+from .tg_serializers import *

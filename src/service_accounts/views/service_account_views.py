@@ -3,9 +3,9 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
-from service_accounts.serializers import ServiceAccountSerializer
 from service_accounts.models import ServiceAccount
 from service_accounts.permissions import ReadOnly
+from service_accounts.serializers import ServiceAccountSerializer
 
 
 class ServiceAccountsView(viewsets.ModelViewSet):
@@ -73,4 +73,3 @@ class ServiceAccountsView(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-

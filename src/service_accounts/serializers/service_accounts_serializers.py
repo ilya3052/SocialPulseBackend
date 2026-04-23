@@ -48,4 +48,3 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceAccount
         fields = ('id', 'name', 'platform_id', 'is_activated', 'data', 'groups', 'groups_count')
-

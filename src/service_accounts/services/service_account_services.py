@@ -13,6 +13,7 @@ def get_service_accounts_aggregated_info():
         "tg_count": result.get('tg_count'),
     }
 
+
 def get_service_accounts_loading():
     accounts = (
         ServiceAccount.objects.all()

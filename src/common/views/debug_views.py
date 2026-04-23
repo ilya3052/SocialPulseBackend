@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from common.logger import setup_logger
 from common.utils.debug_utils import try_parse_json
 
-logger = setup_logger(log_file="../logs/debug.log")
+logger = setup_logger(log_file="./logs/debug.log")
 
 
 class DebugView(APIView):
