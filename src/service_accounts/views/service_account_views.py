@@ -3,9 +3,9 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
-from admin_panel.models import ServiceAccount
-from admin_panel.permissions import ReadOnly
-from admin_panel.serializers import ServiceAccountSerializer
+from service_accounts.serializers import ServiceAccountSerializer
+from service_accounts.models import ServiceAccount
+from service_accounts.permissions import ReadOnly
 
 
 class ServiceAccountsView(viewsets.ModelViewSet):

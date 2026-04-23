@@ -1,6 +1,6 @@
 from django.db.models import Count, Q
 
-from admin_panel.models import ServiceAccount
+from service_accounts.models import ServiceAccount
 
 
 def get_service_accounts_aggregated_info():
