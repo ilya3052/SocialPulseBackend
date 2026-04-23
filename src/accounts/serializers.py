@@ -101,7 +101,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         # поле пароля оставить только в разработке, в идеале его быть не должно
         fields = ('id', 'first_name', 'password', 'last_name', 'username',
-                  'email', 'tg_link', 'vk_link', 'tg_id', 'vk_id', 'is_email_confirmed')
+                  'email', 'tg_link', 'vk_link', 'tg_id', 'vk_id', 'is_email_confirmed', 'is_staff')
         read_only_fields = ('id', 'password')
 
     def update(self, instance, validated_data):
