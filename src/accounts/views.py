@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_telegram_login.authentication import verify_telegram_authentication
 from django_telegram_login.errors import NotTelegramDataError, TelegramDataIsOutdatedError
+from icecream import ic
 from rest_framework import status, generics, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -33,7 +34,7 @@ logger = setup_logger(log_file="src/logs/debug.log")
 
 
 def check_vk_access(internal_data):
-    from admin_panel.models import ServiceAccount
+    from admin_panel.models import ServiceAccount, ServiceAccountData
     group_link = internal_data.get('groupLink')
     screen_name = group_link.split('/')[-1]
     vk_id = internal_data.get('user_social_id')
@@ -84,6 +85,7 @@ def check_vk_access(internal_data):
 
 @async_to_sync
 async def check_tg_access(internal_data):
+    from admin_panel.models import ServiceAccount, ServiceAccountData
     group_link = internal_data.get('groupLink')
     screen_name = group_link.split('/')[-1]
     service_account_id = internal_data.get('serviceAccount')
