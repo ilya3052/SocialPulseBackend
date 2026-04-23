@@ -4,10 +4,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.logger import setup_logger
+from common.logger import setup_logger
 from common.utils.debug_utils import try_parse_json
 
-logger = setup_logger(log_file="src/logs/debug.log")
+logger = setup_logger(log_file="../logs/debug.log")
 
 
 class DebugView(APIView):
