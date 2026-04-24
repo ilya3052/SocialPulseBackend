@@ -36,7 +36,6 @@ class VKCallbackView(APIView):
             headers=headers,
             params=params
         )
-
         data = req.json().get('response')[0]
         vk_id = data.get('id')
         first_name = data.get('first_name')
@@ -120,6 +119,6 @@ class VKCallbackUser(APIView):
         if old_user:
             old_user.delete()
         user.vk_id = response.get('id')
-        user.vk_link = 'https://vk.ru/' + response.get('screenZ_name')
+        user.vk_link = 'https://vk.ru/' + response.get('screen_name')
         user.save()
         return Response(status=status.HTTP_200_OK)
