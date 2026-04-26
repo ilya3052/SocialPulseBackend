@@ -1,8 +1,9 @@
+from icecream import ic
 from rest_framework import serializers
 
 from service_accounts.models import ServiceAccountData, ServiceAccount
 from social_entities.models import Platform
-from social_entities.serializers import GroupSerializer
+from social_entities.serializers import GroupSerializer, PlatformSerializer
 
 
 class ServiceAccountDataSerializer(serializers.ModelSerializer):
@@ -28,6 +29,7 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
         queryset=Platform.objects.all(),
         source='platform'
     )
+    platform = serializers.SerializerMethodField(read_only=True)
 
     def create(self, validated_data):
         data = validated_data.pop('data')
@@ -40,6 +42,10 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
         serializer = GroupSerializer(groups, many=True, context=self.context)
         return serializer.data
 
+    def get_platform(self, obj: ServiceAccount):
+        serializer = PlatformSerializer(obj.platform)
+        return serializer.data
+
     def update(self, instance, validated_data):
         instance.is_activated = validated_data.get('is_activated')
         instance.save()
@@ -47,4 +53,4 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ServiceAccount
-        fields = ('id', 'name', 'platform_id', 'is_activated', 'data', 'groups', 'groups_count')
+        fields = ('id', 'name', 'platform_id', 'platform', 'is_activated', 'app_id', 'data', 'groups', 'groups_count')
