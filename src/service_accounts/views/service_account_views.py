@@ -1,4 +1,7 @@
+from secrets import token_hex
+
 from django.db.models import Count
+from icecream import ic
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
@@ -6,6 +9,7 @@ from rest_framework.response import Response
 from service_accounts.models import ServiceAccount
 from service_accounts.permissions import ReadOnly
 from service_accounts.serializers import ServiceAccountSerializer
+from users.models import OneTimeToken
 
 
 class ServiceAccountsView(viewsets.ModelViewSet):
@@ -40,7 +44,6 @@ class ServiceAccountsView(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         accounts = (
             ServiceAccount.objects.all()
-            .prefetch_related('groups')
             .annotate(
                 groups_count=Count('groups')
             )
@@ -48,7 +51,7 @@ class ServiceAccountsView(viewsets.ModelViewSet):
 
         context = {
             'exclude_fields': [
-                'data', 'groups'
+                'data', 'groups', 'platform_id', 'is_activated', 'app_id'
             ]
         }
 
@@ -71,5 +74,14 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         serializer = ServiceAccountSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = self.request.user
+        if user.is_staff:
+            token = token_hex(16)
+            token_instance = OneTimeToken.objects.filter(user=user).first()
+            if token_instance:
+                token_instance.delete()
+            OneTimeToken.objects.create(user=user, token=token)
+        else:
+            return Response({"msg": "Недостаточно прав"}, status=status.HTTP_403_FORBIDDEN)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({"token": token}, status=status.HTTP_201_CREATED)
