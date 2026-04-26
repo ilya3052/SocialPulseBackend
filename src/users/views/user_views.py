@@ -134,18 +134,3 @@ class UserSocialDataView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class OneTimeTokenView(APIView):
-    permission_classes = [IsAdminUser]
-
-    def get(self, request, *args, **kwargs):
-        user = self.request.user
-        if user.is_staff:
-            token = token_hex(16)
-            token_instance = OneTimeToken.objects.filter(user=user).first()
-            if token_instance:
-                token_instance.delete()
-            OneTimeToken.objects.create(user=user, token=token)
-            return Response({"token": token}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({"msg": "Недостаточно прав"}, status=status.HTTP_403_FORBIDDEN)
