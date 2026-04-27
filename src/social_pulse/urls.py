@@ -21,7 +21,7 @@ from common.views import DebugView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('debug/', DebugView.as_view(), name='error'),
+    path('api/v4/debug/', DebugView.as_view(), name='error'),
     path('api/v4/users/', include('users.urls'), name='users'),
     path('api/v4/auth/', include('social_auth.urls'), name='auth'),
     path('api/v4/admin/', include('social_admin.urls'), name='admin-panel'),
