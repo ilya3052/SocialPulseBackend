@@ -16,7 +16,7 @@ class ServiceAccountsView(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
-        elif self.action in ('list', 'create', 'partial_update', 'destroy'):
+        elif self.action in ('list', 'create', 'partial_update', 'destroy', 'get_with_groups'):
             permission_classes = [IsAdminUser]
         else:
             permission_classes = [ReadOnly]
@@ -39,7 +39,7 @@ class ServiceAccountsView(viewsets.ModelViewSet):
             .annotate(
                 groups_count=Count('groups')
             )
-            .order_by('name', 'groups_count')
+            .order_by('groups_count', 'name')
         ).first()
 
         if not account:
@@ -47,7 +47,7 @@ class ServiceAccountsView(viewsets.ModelViewSet):
 
         context = {
             'exclude_fields': [
-                'platform_id', 'data', 'groups', 'groups_count'
+                'platform_id', 'data', 'groups', 'groups_count', 'app_id'
             ]
         }
 
