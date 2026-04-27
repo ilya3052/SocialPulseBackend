@@ -1,8 +1,10 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from service_accounts.models import ServiceAccount
-from users.models import CustomUser
 from users.serializers import CustomUserSerializer
+
+User = get_user_model()
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -17,7 +19,7 @@ class GroupSerializer(serializers.ModelSerializer):
     )
     user = CustomUserSerializer(read_only=True, many=True)  # а надо ли возвращать?
     user_id = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(),
+        queryset=User.objects.all(),
         source='user',
         many=True,
         write_only=True

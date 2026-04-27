@@ -1,15 +1,12 @@
-from secrets import token_hex
-
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import OneTimeToken
 from users.serializers import UserRegisterSerializer, CustomUserSerializer, UserPasswordSerializer, \
     UserSetPasswordSerializer, UserSocialDataSerializer
 
@@ -133,19 +130,3 @@ class UserSocialDataView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class OneTimeTokenView(APIView):
-    permission_classes = [IsAdminUser]
-
-    def get(self, request, *args, **kwargs):
-        user = self.request.user
-        if user.is_staff:
-            token = token_hex(16)
-            token_instance = OneTimeToken.objects.filter(user=user).first()
-            if token_instance:
-                token_instance.delete()
-            OneTimeToken.objects.create(user=user, token=token)
-            return Response({"token": token}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({"msg": "Недостаточно прав"}, status=status.HTTP_403_FORBIDDEN)
