@@ -54,6 +54,25 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         serializer = ServiceAccountSerializer(account, context=context)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def get_with_groups(self, request, *args, **kwargs):
+        account = (
+            ServiceAccount.objects.filter(pk=self.kwargs.get('pk'))
+            .prefetch_related('groups')
+        ).first()
+
+        if not account:
+            return Response({"msg": "Сервисный аккаунт не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        context = {
+            'exclude_fields': [
+                'platform_id', 'data', 'app_id', 'groups_count', 'is_activated', 'name', 'id', 'platform'
+            ]
+        }
+
+        serializer = ServiceAccountSerializer(account, context=context)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def list(self, request, *args, **kwargs):
         accounts = (
             ServiceAccount.objects.all()
