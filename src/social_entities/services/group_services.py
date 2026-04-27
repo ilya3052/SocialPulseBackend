@@ -1,10 +1,16 @@
+import os
+
 import requests
 from asgiref.sync import async_to_sync, sync_to_async
 from django.db.models import Count, Q
+from django.utils.module_loading import import_string
+from icecream import ic
 from rest_framework import status
 from telethon import TelegramClient
 from telethon.tl.types import Channel
 
+from common.config import ENCRYPTION_KEY
+from common.utils import decrypt
 from social_entities.models import Group
 from social_entities.utils import Status, Platforms
 
@@ -30,7 +36,8 @@ def check_vk_access(internal_data):
 
     service_account: ServiceAccount = ServiceAccount.objects.get(pk=service_account_id)
     data: ServiceAccountData = service_account.data
-    service_key = data.service_key
+    service_key = decrypt(data.service_key, ENCRYPTION_KEY)
+    print(service_key)
 
     params = {
         'group_id': screen_name,
@@ -73,7 +80,8 @@ def check_vk_access(internal_data):
 
 @async_to_sync
 async def check_tg_access(internal_data):
-    from service_accounts.models import ServiceAccount, ServiceAccountData
+    service_account_model = import_string('service_accounts.models.ServiceAccount')
+    service_account_data_model = import_string('service_accounts.models.ServiceAccountData')
     from social_auth.services import get_tg_api_session
 
     group_link = internal_data.get('groupLink')
@@ -81,9 +89,9 @@ async def check_tg_access(internal_data):
     service_account_id = internal_data.get('serviceAccount')
 
     service_account = await sync_to_async(
-        lambda: ServiceAccount.objects.select_related('data').get(pk=service_account_id)
+        lambda: service_account_model.objects.select_related('data').get(pk=service_account_id)
     )()
-    data: ServiceAccountData = service_account.data
+    data: service_account_data_model = service_account.data
     api: TelegramClient = get_tg_api_session(data.session_path)
     async with api:
         try:
