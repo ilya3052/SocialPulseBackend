@@ -14,7 +14,9 @@ class GroupsView(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
 
     def get_queryset(self):
-        return Group.objects.filter(user=self.request.user)
+        if self.request.user.is_staff and self.action == 'partial_update':
+            return Group.objects.all()
+        return Group.objects.filter(user__in=[self.request.user])
 
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
