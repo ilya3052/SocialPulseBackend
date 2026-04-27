@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.module_loading import import_string
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -37,9 +38,24 @@ class UserAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
+
+        vk_tokens_model = import_string("social_auth.models.VKTokens")
+        vk_tokens_serializer = import_string("social_auth.serializers.vk_serializers.VKTokensSerializer")
+        token_serializer = None
+
+        if user.vk_id:
+            tokens = vk_tokens_model.objects.filter(user=user).first()
+            token_serializer = vk_tokens_serializer(tokens)
+
+        tokens = None
+
+        if token_serializer:
+            tokens = token_serializer.data
+
         serializer = CustomUserSerializer(user)
         has_password = user.has_usable_password()
-        return Response({"data": serializer.data, "has_password": has_password}, status=status.HTTP_200_OK)
+        return Response({"data": serializer.data, "has_password": has_password, "tokens": tokens},
+                        status=status.HTTP_200_OK)
 
     def patch(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)

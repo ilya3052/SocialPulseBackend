@@ -10,9 +10,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from SocialPulse import settings
 from social_auth.models import TelegramToken
 from social_auth.serializers import TelegramBindingSerializer, TelegramTokenPairSerializer
+from social_pulse import settings
 
 User = get_user_model()
 

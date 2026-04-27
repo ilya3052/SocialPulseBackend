@@ -1,9 +1,13 @@
+import os
+from secrets import token_hex
+
 from django.db.models import Count
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from service_accounts.models import ServiceAccount
+from service_accounts.models import ServiceAccount, OneTimeToken, ServiceAccountData
 from service_accounts.permissions import ReadOnly
 from service_accounts.serializers import ServiceAccountSerializer
 
@@ -12,11 +16,21 @@ class ServiceAccountsView(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
-        elif self.action in ('list', 'create', 'partial_update'):
+        elif self.action in ('list', 'create', 'partial_update', 'destroy', 'get_with_groups'):
             permission_classes = [IsAdminUser]
         else:
             permission_classes = [ReadOnly]
         return [permission() for permission in permission_classes]
+
+    queryset = ServiceAccount.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        account_data: ServiceAccountData = ServiceAccountData.objects.get(account_id=self.kwargs.get('pk'))
+        if session_path := account_data.session_path:
+            if os.path.exists(session_path):
+                os.remove(session_path)
+        super().destroy(request, *args, *kwargs)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def retrieve(self, request, *args, **kwargs):
         account = (
@@ -25,22 +39,43 @@ class ServiceAccountsView(viewsets.ModelViewSet):
             .annotate(
                 groups_count=Count('groups')
             )
-            .order_by('name', 'groups_count')
+            .order_by('groups_count', 'name')
         ).first()
+
+        if not account:
+            return Response({"msg": "Сервисный аккаунт не найден"}, status=status.HTTP_404_NOT_FOUND)
 
         context = {
             'exclude_fields': [
-                'platform_id', 'data', 'groups', 'groups_count'
+                'platform_id', 'data', 'groups', 'groups_count', 'app_id'
             ]
         }
 
         serializer = ServiceAccountSerializer(account, context=context)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def get_with_groups(self, request, *args, **kwargs):
+        account = (
+            ServiceAccount.objects.filter(pk=self.kwargs.get('pk'))
+            .prefetch_related('groups')
+        ).first()
+
+        if not account:
+            return Response({"msg": "Сервисный аккаунт не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        context = {
+            'exclude_fields': [
+                'platform_id', 'data', 'app_id', 'groups_count', 'is_activated', 'name', 'id', 'platform'
+            ]
+        }
+
+        serializer = ServiceAccountSerializer(account, context=context)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def list(self, request, *args, **kwargs):
         accounts = (
             ServiceAccount.objects.all()
-            .prefetch_related('groups')
             .annotate(
                 groups_count=Count('groups')
             )
@@ -48,12 +83,15 @@ class ServiceAccountsView(viewsets.ModelViewSet):
 
         context = {
             'exclude_fields': [
-                'data', 'groups'
+                'data', 'groups', 'platform_id', 'app_id'
             ]
         }
-
+        from social_entities.services import get_group_aggregated_info
+        group_data = get_group_aggregated_info()
         serializer = ServiceAccountSerializer(accounts, many=True, context=context)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {"data": serializer.data, "total_group_count": group_data.get('vk_count') + group_data.get('tg_count')},
+            status=status.HTTP_200_OK)
 
     def partial_update(self, request, *args, **kwargs):
         instance = ServiceAccount.objects.get(pk=self.kwargs.get('pk'))
@@ -72,4 +110,22 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class ServiceAccountActivateView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        user = self.request.user
+        account_id = self.kwargs.get('account_id')
+
+        if user.is_staff:
+            token = token_hex(16)
+            token_instance = OneTimeToken.objects.filter(account_id=account_id).first()
+            if token_instance:
+                token_instance.delete()
+            OneTimeToken.objects.create(account_id=account_id, token=token)
+            return Response({"token": token}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"msg": "Недостаточно прав"}, status=status.HTTP_403_FORBIDDEN)

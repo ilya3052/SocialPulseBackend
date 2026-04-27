@@ -1,8 +1,10 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
-from SocialPulse import settings
-from users.models import CustomUser
+from social_pulse import settings
+
+User = get_user_model()
 
 
 def default_expires_at():
@@ -10,7 +12,7 @@ def default_expires_at():
 
 
 class TelegramToken(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     short_token = models.CharField(max_length=64, unique=True)
     access_token = models.CharField(max_length=512)
     refresh_token = models.CharField(max_length=512)
@@ -18,7 +20,7 @@ class TelegramToken(models.Model):
 
 
 class VKTokens(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     refresh_vk_token = models.CharField(max_length=512)
     access_vk_token = models.CharField(max_length=512)
     id_vk_token = models.TextField()
@@ -27,6 +29,6 @@ class VKTokens(models.Model):
 
 
 class EmailActivate(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     token = models.CharField(max_length=64, unique=True)
     expires_at = models.DateTimeField(default=default_expires_at)

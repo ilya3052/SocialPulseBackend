@@ -11,7 +11,8 @@ wheels/
 .idea
 
 *.env
-
+session
+logs
 *.log
 *.sqlite3
 *.html

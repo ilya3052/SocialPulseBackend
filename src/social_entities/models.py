@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from SocialPulse import settings
+from social_pulse import settings
 
 
 def default_expires_at():
