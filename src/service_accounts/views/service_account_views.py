@@ -1,13 +1,13 @@
+import os
 from secrets import token_hex
 
 from django.db.models import Count
-from icecream import ic
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from service_accounts.models import ServiceAccount, OneTimeToken
+from service_accounts.models import ServiceAccount, OneTimeToken, ServiceAccountData
 from service_accounts.permissions import ReadOnly
 from service_accounts.serializers import ServiceAccountSerializer
 
@@ -67,9 +67,12 @@ class ServiceAccountsView(viewsets.ModelViewSet):
                 'data', 'groups', 'platform_id', 'app_id'
             ]
         }
-
+        from social_entities.services import get_group_aggregated_info
+        group_data = get_group_aggregated_info()
         serializer = ServiceAccountSerializer(accounts, many=True, context=context)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {"data": serializer.data, "total_group_count": group_data.get('vk_count') + group_data.get('tg_count')},
+            status=status.HTTP_200_OK)
 
     def partial_update(self, request, *args, **kwargs):
         instance = ServiceAccount.objects.get(pk=self.kwargs.get('pk'))
