@@ -2,9 +2,10 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
-from SocialPulse import settings
+from social_pulse import settings
 
 User = get_user_model()
+
 
 def default_expires_at():
     return timezone.now() + settings.SHORT_TOKEN_LIFETIME

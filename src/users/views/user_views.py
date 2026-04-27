@@ -54,7 +54,8 @@ class UserAPIView(APIView):
 
         serializer = CustomUserSerializer(user)
         has_password = user.has_usable_password()
-        return Response({"data": serializer.data, "has_password": has_password, "tokens": tokens}, status=status.HTTP_200_OK)
+        return Response({"data": serializer.data, "has_password": has_password, "tokens": tokens},
+                        status=status.HTTP_200_OK)
 
     def patch(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)

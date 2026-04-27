@@ -1,10 +1,7 @@
-import os
-
 import requests
 from asgiref.sync import async_to_sync, sync_to_async
 from django.db.models import Count, Q
 from django.utils.module_loading import import_string
-from icecream import ic
 from rest_framework import status
 from telethon import TelegramClient
 from telethon.tl.types import Channel

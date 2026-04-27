@@ -1,6 +1,6 @@
 from django.core.mail import send_mail
 
-from SocialPulse import settings
+from social_pulse import settings
 
 
 def send_confirmation_email(message, email):

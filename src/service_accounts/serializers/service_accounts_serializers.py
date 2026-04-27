@@ -1,4 +1,3 @@
-from icecream import ic
 from rest_framework import serializers
 
 from service_accounts.models import ServiceAccountData, ServiceAccount
