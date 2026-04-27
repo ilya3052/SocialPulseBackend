@@ -24,6 +24,14 @@ class ServiceAccountsView(viewsets.ModelViewSet):
 
     queryset = ServiceAccount.objects.all()
 
+    def destroy(self, request, *args, **kwargs):
+        account_data: ServiceAccountData = ServiceAccountData.objects.get(account_id=self.kwargs.get('pk'))
+        if session_path := account_data.session_path:
+            if os.path.exists(session_path):
+                os.remove(session_path)
+        super().destroy(request, *args, *kwargs)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def retrieve(self, request, *args, **kwargs):
         account = (
             ServiceAccount.objects.filter(platform__alias=self.kwargs.get('platform'))
