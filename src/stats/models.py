@@ -10,4 +10,5 @@ class AbsoluteStats(models.Model):
     comms_count = models.IntegerField()
     last_updated_at = models.DateTimeField(default=timezone.now)
 
+    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='stats')
 
