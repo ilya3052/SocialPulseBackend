@@ -12,3 +12,12 @@ class AbsoluteStats(models.Model):
 
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='stats')
 
+
+class Snapshot(models.Model):
+    Platforms = {
+        "VK": "Вконтакте",
+        "TG": "Telegram"
+    }
+    timestamp = models.DateTimeField(default=timezone.now)
+    type = models.CharField(max_length=2, choices=Platforms)
+    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='snapshot_stats')
