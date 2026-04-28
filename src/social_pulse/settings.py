@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'social_admin',
     'service_accounts',
     'common',
+    'stats',
 
     'rest_framework',
     'rest_framework_simplejwt',
