@@ -10,17 +10,17 @@ class AbsoluteStats(models.Model):
     comms_count = models.IntegerField()
     last_updated_at = models.DateTimeField(default=timezone.now)
 
-    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='stats')
+    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='abs_stats')
 
 
 class Snapshot(models.Model):
-    Platforms = {
-        "VK": "Вконтакте",
-        "TG": "Telegram"
+    Type = {
+        "DY": "Daily",
+        "HY": "Hourly"
     }
     timestamp = models.DateTimeField(default=timezone.now)
-    type = models.CharField(max_length=2, choices=Platforms)
-    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='snapshot_stats')
+    type = models.CharField(max_length=2, choices=Type)
+    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='snapshot_stats') # Group.objects.get().snapshot_stats.all()
 
 
 class SnapshotStats(models.Model):
