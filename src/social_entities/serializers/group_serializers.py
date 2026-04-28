@@ -30,6 +30,8 @@ class GroupSerializer(serializers.ModelSerializer):
         source='service_account'
     )
 
+    slug = serializers.CharField(max_length=256, read_only=True)
+
     def get_platform(self, obj):
         from social_entities.serializers import PlatformSerializer
 
@@ -42,7 +44,7 @@ class GroupSerializer(serializers.ModelSerializer):
         from social_entities.models import Group
 
         model = Group
-        fields = ('id', 'name', 'link', 'external_id', 'added_at',
+        fields = ('id', 'name', 'slug', 'link', 'external_id', 'added_at',
                   'platform_id', 'platform',
                   'user', 'user_id',
                   'service_account_id')
