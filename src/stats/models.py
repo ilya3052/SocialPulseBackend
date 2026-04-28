@@ -21,3 +21,14 @@ class Snapshot(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     type = models.CharField(max_length=2, choices=Platforms)
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='snapshot_stats')
+
+
+class SnapshotStats(models.Model):
+    likes_count = models.IntegerField()
+    views_count = models.IntegerField()
+    participants_count = models.IntegerField()
+    repost_count = models.IntegerField()
+    comms_count = models.IntegerField()
+    coverage = models.IntegerField()
+    last_updated_at = models.DateTimeField(default=timezone.now)
+    snapshot = models.ForeignKey('Snapshot', on_delete=models.CASCADE, related_name='stats') # Snapshot.objects.get().stats.all()
