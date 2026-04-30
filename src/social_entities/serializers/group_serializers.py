@@ -8,6 +8,14 @@ User = get_user_model()
 
 
 class GroupSerializer(serializers.ModelSerializer):
+    def get_fields(self):
+        fields = super().get_fields()
+        exclude_fields = self.context.get('exclude_fields', [])
+
+        for field in exclude_fields:
+            fields.pop(field, None)
+        return fields
+
     from social_entities.models import Platform
 
     platform = serializers.SerializerMethodField(read_only=True)
