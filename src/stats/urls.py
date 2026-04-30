@@ -1,7 +1,8 @@
 from django.urls import path
 
-from stats.views import SnapshotView
+from stats.views import SnapshotStatsView, AbsoluteStatsView
 
 urlpatterns = [
-    path('snapshot/', SnapshotView.as_view(), name='snapshots')
+    path('<int:group_id>/absolute/', AbsoluteStatsView.as_view({"get": "retrieve"}), name='absolute-stats'),
+    path('<int:pk>/', SnapshotStatsView.as_view({"get": "retrieve"}, name='snapshot-stats'))
 ]
