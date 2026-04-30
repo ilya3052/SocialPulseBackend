@@ -33,26 +33,24 @@ class SnapshotStatsSerializer(serializers.ModelSerializer):
         fields = ('id', 'likes_count', 'views_count', 'participants_count', 'repost_count', 'comms_count', 'coverage',
                   'last_updated_at', 'snapshot_id', 'snapshot')
 
+# создать в common класс SerializerMixin который будет переопределять get_fields и наследовать от него дополнительно все классы сериализаторов
 class AbsoluteStatsSerializer(serializers.ModelSerializer):
-    from social_entities.models import Group
-    group_id = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(),
-        source='group',
-        write_only=True
-    )
+    def get_fields(self):
+        fields = super().get_fields()
+        exclude_fields = self.context.get('exclude_fields', [])
 
-    group = serializers.SerializerMethodField(read_only=True)
+        for field in exclude_fields:
+            fields.pop(field, None)
+        return fields
 
     def get_group(self, obj):
         from social_entities.serializers import GroupSerializer
         if not obj.group:
             return None
-        serializer = GroupSerializer(obj.platform, context=self.context)
+        serializer = GroupSerializer(obj.group, context=self.context)
         return serializer.data
 
     class Meta:
         model = AbsoluteStats
-        fields = ('id', 'likes_count', 'views_count', 'participants_count', 'repost_count', 'comms_count', 'coverage',
-                  'last_updated_at', 'group')
-        # read_only_fields = ('id', 'likes_count', 'views_count', 'participants_count', 'repost_count', 'comms_count', 'coverage',
-        #           'last_updated_at', 'group')
+        fields = ('id', 'likes_count', 'views_count', 'participants_count', 'repost_count', 'comms_count',
+                  'last_updated_at')
