@@ -12,7 +12,6 @@ from social_entities.utils import Platforms
 class GroupsView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupSerializer
-    lookup_url_kwarg = 'slug'
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

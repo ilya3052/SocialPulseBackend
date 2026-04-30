@@ -33,7 +33,6 @@ class SnapshotStatsSerializer(serializers.ModelSerializer):
         fields = ('id', 'likes_count', 'views_count', 'participants_count', 'repost_count', 'comms_count', 'coverage',
                   'last_updated_at', 'snapshot_id', 'snapshot')
 
-# создать в common класс SerializerMixin который будет переопределять get_fields и наследовать от него дополнительно все классы сериализаторов
 class AbsoluteStatsSerializer(serializers.ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()

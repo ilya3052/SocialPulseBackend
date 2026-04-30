@@ -8,9 +8,11 @@ class SnapshotView(viewsets.ModelViewSet):
     queryset = Snapshot.objects.all()
     serializer_class = SnapshotSerializer
 
+
 class SnapshotStatsView(viewsets.ModelViewSet):
     queryset = SnapshotStats.objects.all()
     serializer_class = SnapshotStatsSerializer
+
 
 class AbsoluteStatsView(viewsets.ModelViewSet):
     def get_serializer_context(self):
