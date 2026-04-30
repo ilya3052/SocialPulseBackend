@@ -12,6 +12,16 @@ from social_entities.utils import Platforms
 class GroupsView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupSerializer
+    lookup_url_kwarg = 'slug'
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        exclude_fields_str = self.request.GET.get('exclude_fields')
+        exclude_fields = exclude_fields_str.split(',') if exclude_fields_str else []
+        context['exclude_fields'] = exclude_fields
+
+        return context
 
     def get_queryset(self):
         if self.request.user.is_staff and self.action == 'partial_update':
