@@ -1,7 +1,8 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
 
 from social_entities.models import Group
 from social_entities.serializers import GroupSerializer
@@ -9,9 +10,10 @@ from social_entities.services import check_access_function
 from social_entities.utils import Platforms
 
 
-class GroupsView(viewsets.ModelViewSet):
+class GroupsViewByID(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupSerializer
+    lookup_field = 'pk'
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -37,6 +39,24 @@ class GroupsView(viewsets.ModelViewSet):
 
         self.perform_create(serializer)
         return Response(status=status.HTTP_201_CREATED)
+
+
+class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = GroupSerializer
+    lookup_field = 'slug'
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        exclude_fields_str = self.request.GET.get('exclude_fields')
+        exclude_fields = exclude_fields_str.split(',') if exclude_fields_str else []
+        context['exclude_fields'] = exclude_fields
+
+        return context
+
+    def get_queryset(self):
+        return Group.objects.filter(user__in=[self.request.user])
 
 
 class CheckGroupAccessView(APIView):
