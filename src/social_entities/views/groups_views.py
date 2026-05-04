@@ -8,6 +8,7 @@ from social_entities.models import Group
 from social_entities.serializers import GroupSerializer
 from social_entities.services import check_access_function
 from social_entities.utils import Platforms
+from stats.models import AbsoluteStats
 
 
 class GroupsViewByID(viewsets.ModelViewSet):
@@ -38,6 +39,9 @@ class GroupsViewByID(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         self.perform_create(serializer)
+        # отсюда посылается сигнал post_save
+        group = serializer.instance
+        AbsoluteStats.objects.create(group=group)
         return Response(status=status.HTTP_201_CREATED)
 
 

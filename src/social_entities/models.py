@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+from unidecode import unidecode
 
 from social_pulse import settings
 
@@ -31,7 +32,7 @@ class Group(models.Model):
 
     def save(self, *args, **kwargs):  # new
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = slugify(unidecode(self.name))
         return super().save(*args, **kwargs)
 
 
