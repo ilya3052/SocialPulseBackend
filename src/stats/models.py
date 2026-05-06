@@ -23,20 +23,19 @@ class BestPosts(models.Model):
 
 class Snapshot(models.Model):
     Type = {
-        "DY": "Daily",
-        "HY": "Hourly"
+        "Daily": "Daily",
+        "Hourly": "Hourly"
     }
     timestamp = models.DateTimeField(default=timezone.now)
-    type = models.CharField(max_length=2, choices=Type)
+    type = models.CharField(max_length=6, choices=Type)
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='snapshot_stats') # Group.objects.get().snapshot_stats.all()
 
 
 class SnapshotStats(models.Model):
     likes_count = models.IntegerField()
     views_count = models.IntegerField()
-    participants_count = models.IntegerField()
+    participants_delta = models.IntegerField()
     repost_count = models.IntegerField()
     comms_count = models.IntegerField()
     coverage = models.IntegerField()
-    last_updated_at = models.DateTimeField(default=timezone.now)
     snapshot = models.ForeignKey('Snapshot', on_delete=models.CASCADE, related_name='stats') # Snapshot.objects.get().stats.all()
