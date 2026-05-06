@@ -10,5 +10,5 @@ class Status(IntEnum):
 
 
 class Platforms(Enum):
-    VK = 'vk'
-    TG = 'tg'
+    VK = 'VK'
+    TG = 'TG'
