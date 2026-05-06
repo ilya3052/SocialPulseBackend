@@ -13,6 +13,13 @@ class AbsoluteStats(models.Model):
 
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='abs_stats')
 
+class BestPosts(models.Model):
+    most_liked = models.IntegerField()
+    most_reposted = models.IntegerField()
+    most_commented = models.IntegerField()
+    most_viewed = models.IntegerField()
+    last_updated_at = models.DateTimeField(default=timezone.now)
+    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='best_posts')
 
 class Snapshot(models.Model):
     Type = {
