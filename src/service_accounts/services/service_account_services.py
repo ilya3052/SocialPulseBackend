@@ -1,6 +1,9 @@
 from django.db.models import Count, Q
 
-from service_accounts.models import ServiceAccount
+from common.config import ENCRYPTION_KEY
+from common.utils import decrypt
+from service_accounts.models import ServiceAccount, ServiceAccountData
+from social_entities.utils import Platforms
 
 
 def get_service_accounts_aggregated_info():
@@ -38,3 +41,12 @@ def get_service_accounts_loading():
             "count": max_l_acc.groups_count
         },
     }
+
+def get_service_account_data(service_account: ServiceAccount, platform: Platforms):
+    data: ServiceAccountData = service_account.data
+    match platform:
+        case Platforms.VK:
+            return decrypt(data.service_key, ENCRYPTION_KEY)
+        case Platforms.TG:
+            return data.session_path
+
