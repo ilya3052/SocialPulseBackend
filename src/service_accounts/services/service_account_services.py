@@ -46,7 +46,6 @@ def get_service_account_data(service_account: ServiceAccount, platform: Platform
     data: ServiceAccountData = service_account.data
     match platform:
         case Platforms.VK:
-            return decrypt(data.service_key, ENCRYPTION_KEY)
+            return {"service_key": decrypt(data.service_key, ENCRYPTION_KEY)}
         case Platforms.TG:
-            return data.session_path
-
+            return {"session_path": data.session_path}
