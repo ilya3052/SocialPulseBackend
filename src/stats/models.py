@@ -21,6 +21,10 @@ class BestPosts(models.Model):
     last_updated_at = models.DateTimeField(default=timezone.now)
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='best_posts')
 
+    def to_dict(self):
+        fields = ['most_viewed', 'most_liked', 'most_commented', 'most_reposted']
+        return {field: str(getattr(self, field)) for field in fields}
+
 class Snapshot(models.Model):
     Type = {
         "Daily": "Daily",
