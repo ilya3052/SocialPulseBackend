@@ -4,15 +4,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from service_accounts.services import get_service_account_data
 from social_entities.models import Group
+from social_entities.permissions import IsAuthenticatedAndOwner
 from social_entities.serializers import GroupSerializer
-from social_entities.services import check_access_function
+from social_entities.services import check_access_function, get_group_info
 from social_entities.utils import Platforms
 from stats.models import AbsoluteStats
 
 
 class GroupsViewByID(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedAndOwner]
     serializer_class = GroupSerializer
     lookup_field = 'pk'
 
@@ -46,7 +48,7 @@ class GroupsViewByID(viewsets.ModelViewSet):
 
 
 class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedAndOwner]
     serializer_class = GroupSerializer
     lookup_field = 'slug'
 
@@ -64,10 +66,10 @@ class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):
                 .select_related('service_account')
                 .prefetch_related('service_account__data')
                 .select_related('platform')
-                .filter(slug=self.kwargs.get('slug')))
+                .prefetch_related('user'))
 
     def retrieve(self, request, *args, **kwargs):
-        group = self.get_queryset().first()
+        group = self.get_object()
         platform = Platforms(group.platform.alias)
         data = get_service_account_data(group.service_account, platform)
 
