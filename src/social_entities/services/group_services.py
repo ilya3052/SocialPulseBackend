@@ -112,3 +112,31 @@ check_access_function = {
     Platforms.VK: check_vk_access,
     Platforms.TG: check_tg_access
 }
+
+
+def get_group_info(group_id, platform: Platforms, **kwargs):
+    return get_group_info_function.get(platform)(group_id, **kwargs)
+
+
+def get_vk_info(group_id, **kwargs):
+    params = {
+        'group_id': group_id,
+        'fields': 'description',
+        'v': 5.199
+    }
+    headers = {
+        'Authorization': f'Bearer {kwargs.get('service_key')}',
+    }
+
+    req = requests.get(
+        'https://api.vk.ru/method/groups.getById',
+        headers=headers,
+        params=params
+    )
+    if (code := req.status_code) != 200:
+        return {"error_code": code}  # добавить информативные ошибки в зависимости от кода ответа
+
+    data = req.json()
+    group_data = data.get('response').get('groups')[0]
+    return {"description": group_data.get('description'), "photo_url": group_data.get('photo_100')}
+
