@@ -60,7 +60,34 @@ class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):
         return context
 
     def get_queryset(self):
-        return Group.objects.filter(user__in=[self.request.user])
+        return (Group.objects
+                .select_related('service_account')
+                .prefetch_related('service_account__data')
+                .select_related('platform')
+                .filter(slug=self.kwargs.get('slug')))
+
+    def retrieve(self, request, *args, **kwargs):
+        group = self.get_queryset().first()
+        platform = Platforms(group.platform.alias)
+        data = get_service_account_data(group.service_account, platform)
+
+        options = {}
+        if "service_key" in data:
+            options['service_key'] = data.get('service_key')
+        elif "session_path" in data:
+            options['session_path'] = data.get('session_path')
+
+        result = get_group_info(group.external_id, Platforms(group.platform.alias), **options)
+        if "error_code" in result:
+            return Response(status=result.get('error_code'))
+
+        description = result.get('description')
+        photo_url = result.get('photo_url')
+
+        serializer = self.get_serializer(group)
+
+        return Response({**serializer.data, "description": description, "photo_url": photo_url}, status=status.HTTP_200_OK)
+
 
 
 class CheckGroupAccessView(APIView):
