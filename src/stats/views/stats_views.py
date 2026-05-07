@@ -48,7 +48,9 @@ class BestPostsView(APIView):
             return Response({"error": "Не указана целевая платформа"}, status=status.HTTP_404_NOT_FOUND)
 
         platform = Platforms(platform)
-        posts: BestPosts = BestPosts.objects.select_related('group__service_account__data').get(group_id=group_id)
+        posts: BestPosts = get_object_or_404(BestPosts.objects.select_related('group__service_account__data'), group_id=group_id)
+        if not posts:
+            return Response({"error": "Не найден объект лучших постов для группы, возможно, для группы еще не собрана абсолютная статистика"})
         data = posts.group.service_account.data
 
         options = {}
