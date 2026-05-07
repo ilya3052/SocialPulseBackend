@@ -13,6 +13,7 @@ class AbsoluteStats(models.Model):
 
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='abs_stats')
 
+
 class BestPosts(models.Model):
     most_liked = models.IntegerField()
     most_reposted = models.IntegerField()
@@ -25,6 +26,7 @@ class BestPosts(models.Model):
         fields = ['most_viewed', 'most_liked', 'most_commented', 'most_reposted']
         return {field: str(getattr(self, field)) for field in fields}
 
+
 class Snapshot(models.Model):
     Type = {
         "Daily": "Daily",
@@ -32,7 +34,8 @@ class Snapshot(models.Model):
     }
     timestamp = models.DateTimeField(default=timezone.now)
     type = models.CharField(max_length=6, choices=Type)
-    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='snapshot_stats') # Group.objects.get().snapshot_stats.all()
+    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE,
+                              related_name='snapshot_stats')  # Group.objects.get().snapshot_stats.all()
 
 
 class SnapshotStats(models.Model):
@@ -42,4 +45,5 @@ class SnapshotStats(models.Model):
     repost_count = models.IntegerField()
     comms_count = models.IntegerField()
     coverage = models.IntegerField()
-    snapshot = models.ForeignKey('Snapshot', on_delete=models.CASCADE, related_name='stats') # Snapshot.objects.get().stats.all()
+    snapshot = models.ForeignKey('Snapshot', on_delete=models.CASCADE,
+                                 related_name='stats')  # Snapshot.objects.get().stats.all()

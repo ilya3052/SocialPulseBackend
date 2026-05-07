@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -24,7 +23,8 @@ class Migration(migrations.Migration):
                 ('repost_count', models.IntegerField()),
                 ('comms_count', models.IntegerField()),
                 ('last_updated_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='abs_stats', to='social_entities.group')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='abs_stats',
+                                            to='social_entities.group')),
             ],
         ),
         migrations.CreateModel(
@@ -33,7 +33,8 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('timestamp', models.DateTimeField(default=django.utils.timezone.now)),
                 ('type', models.CharField(choices=[('DY', 'Daily'), ('HY', 'Hourly')], max_length=2)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='snapshot_stats', to='social_entities.group')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='snapshot_stats',
+                                            to='social_entities.group')),
             ],
         ),
         migrations.CreateModel(
@@ -47,7 +48,8 @@ class Migration(migrations.Migration):
                 ('comms_count', models.IntegerField()),
                 ('coverage', models.IntegerField()),
                 ('last_updated_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('snapshot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='stats', to='stats.snapshot')),
+                ('snapshot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='stats',
+                                               to='stats.snapshot')),
             ],
         ),
     ]
