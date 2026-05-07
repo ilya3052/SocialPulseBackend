@@ -52,4 +52,17 @@ class AbsoluteStatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = AbsoluteStats
         fields = ('id', 'likes_count', 'views_count', 'participants_count', 'repost_count', 'comms_count',
-                  'last_updated_at')
+                  'posts_count', 'last_updated_at')
+
+
+class BestPostsSerializer(serializers.ModelSerializer):
+    def get_fields(self):
+        fields = super().get_fields()
+        exclude_fields = self.context.get('exclude_fields', [])
+        for field in exclude_fields:
+            fields.pop(field, None)
+        return fields
+
+    class Meta:
+        model = BestPosts
+        fields = ('most_liked', 'most_reposted', 'most_commented', 'most_viewed', 'last_updated_at')
