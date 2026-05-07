@@ -1,6 +1,7 @@
 import requests
 from asgiref.sync import async_to_sync
 
+from social_auth.services import get_tg_api_session
 from social_entities.utils import Platforms
 from stats.models import BestPosts
 
@@ -58,8 +59,46 @@ def get_vk_best_posts_info(best_post_obj: BestPosts, service_key):
 
 
 @async_to_sync
-async def get_tg_best_posts_info(best_post_obj, session_path):
-    pass
+async def get_tg_best_posts_info(best_post_obj: BestPosts, session_path):
+    api = get_tg_api_session(session_path)
+    group = best_post_obj.group
+    group_id = group.external_id
+
+    posts_ids = best_post_obj.to_dict()
+
+    async with api:
+        channel = await api.get_entity(group_id)
+        name = channel.username
+        messages = await api.get_messages(channel, ids=list(map(int, posts_ids.values())))
+
+    posts_data = {
+        "most_viewed": {},
+        "most_liked": {},
+        "most_commented": {},
+        "most_reposted": {},
+    }
+
+    items_by_id = {str(message.id): message for message in messages}
+
+    for metric, post_id in posts_ids.items():
+        item = items_by_id.get(str(post_id))
+        reactions_count = 0
+        if item.reactions:
+            for reaction in item.reactions.results:
+                reactions_count += reaction.count
+        if item:
+            item_id = item.id
+            posts_data[metric] = {
+                'link': f'https://t.me/{name}/{item_id}',
+                'text': item.message,
+                'metrics': {
+                    "views": item.views,
+                    "likes": reactions_count,
+                    "comments": item.replies or 0,
+                    "reposts": item.forwards
+                }
+            }
+    return posts_data
 
 
 get_posts_info_by_platform_functions = {
