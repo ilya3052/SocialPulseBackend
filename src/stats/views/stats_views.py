@@ -50,11 +50,9 @@ class BestPostsView(APIView):
             return Response({"error": "Не указана целевая платформа"}, status=status.HTTP_404_NOT_FOUND)
 
         platform = Platforms(platform)
-        posts: BestPosts = get_object_or_404(BestPosts.objects.select_related('group__service_account__data'),
-                                             group_id=group_id)
+        posts: BestPosts = BestPosts.objects.select_related('group__service_account__data').filter(group_id=group_id).first()
         if not posts:
-            return Response({
-                                "error": "Не найден объект лучших постов для группы, возможно, для группы еще не собрана абсолютная статистика"})
+            return Response({"error": "Статистика лучших постов пока недоступна"})
         data = posts.group.service_account.data
 
         options = {}
@@ -65,4 +63,4 @@ class BestPostsView(APIView):
             options['service_key'] = decrypt(data.service_key, ENCRYPTION_KEY)
 
         best_posts_info = get_best_posts_info(posts, platform, **options)
-        return Response({**best_posts_info}, status=status.HTTP_200_OK)
+        return Response({**best_posts_info, "last_updated_at": posts.last_updated_at}, status=status.HTTP_200_OK)
