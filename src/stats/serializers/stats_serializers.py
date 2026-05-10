@@ -28,8 +28,8 @@ class SnapshotStatsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SnapshotStats
-        fields = ('id', 'likes_count', 'views_count', 'participants_count', 'repost_count', 'comms_count', 'coverage',
-                  'last_updated_at', 'snapshot_id', 'snapshot')
+        fields = ('id', 'likes_count', 'views_count', 'participants_delta', 'repost_count', 'comms_count', 'coverage',
+                  'snapshot_id', 'snapshot')
 
 
 class AbsoluteStatsSerializer(serializers.ModelSerializer):
