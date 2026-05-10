@@ -10,13 +10,35 @@ from stats.utils import format_posts_info
 
 
 class SnapshotView(viewsets.ModelViewSet):
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        exclude_fields_str = self.request.GET.get('exclude_fields')
+        exclude_fields = exclude_fields_str.split(',') if exclude_fields_str else []
+
+        context['exclude_fields'] = exclude_fields
+
+        return context
+
     queryset = Snapshot.objects.all()
     serializer_class = SnapshotSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class SnapshotStatsView(viewsets.ModelViewSet):
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        exclude_fields_str = self.request.GET.get('exclude_fields')
+        exclude_fields = exclude_fields_str.split(',') if exclude_fields_str else []
+
+        context['exclude_fields'] = exclude_fields
+
+        return context
+
     queryset = SnapshotStats.objects.all()
     serializer_class = SnapshotStatsSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class AbsoluteStatsView(viewsets.ModelViewSet):
@@ -41,7 +63,8 @@ class BestPostsView(APIView):
 
     def get(self, request, *args, **kwargs):
         group_id = self.kwargs.get('group_id')
-        posts: QuerySet[BestPostInfo] = BestPostInfo.objects.select_related('group__platform').filter(group_id=group_id).all()
+        posts: QuerySet[BestPostInfo] = BestPostInfo.objects.select_related('group__platform').filter(
+            group_id=group_id).all()
         if not posts:
             return Response({"error": "Статистика лучших постов пока недоступна"}, status=status.HTTP_200_OK)
         best_posts_info = format_posts_info(posts)
