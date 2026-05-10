@@ -14,23 +14,22 @@ class AbsoluteStats(models.Model):
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='abs_stats')
 
 
-class BestPosts(models.Model):
-    most_liked = models.IntegerField()
-    most_reposted = models.IntegerField()
-    most_commented = models.IntegerField()
-    most_viewed = models.IntegerField()
+class BestPostInfo(models.Model):
+    likes_count = models.IntegerField()
+    comms_count = models.IntegerField()
+    views_count = models.IntegerField()
+    reposts_count = models.IntegerField()
+    post_id = models.IntegerField()
+    content = models.CharField(max_length=150)
+    post_type = models.CharField(max_length=16)
     last_updated_at = models.DateTimeField(default=timezone.now)
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='best_posts')
-
-    def to_dict(self):
-        fields = ['most_viewed', 'most_liked', 'most_commented', 'most_reposted']
-        return {field: str(getattr(self, field)) for field in fields}
 
 
 class Snapshot(models.Model):
     Type = {
-        "Daily": "Daily",
-        "Hourly": "Hourly"
+        "DAILY": "DAILY",
+        "HOURLY": "HOURLY"
     }
     timestamp = models.DateTimeField(default=timezone.now)
     type = models.CharField(max_length=6, choices=Type)
