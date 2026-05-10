@@ -42,6 +42,7 @@ def get_service_accounts_loading():
         },
     }
 
+
 def get_service_account_data(service_account: ServiceAccount, platform: Platforms):
     data: ServiceAccountData = service_account.data
     match platform:

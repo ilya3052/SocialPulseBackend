@@ -88,8 +88,8 @@ class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):
 
         serializer = self.get_serializer(group)
 
-        return Response({**serializer.data, "description": description, "photo_url": photo_url}, status=status.HTTP_200_OK)
-
+        return Response({**serializer.data, "description": description, "photo_url": photo_url},
+                        status=status.HTTP_200_OK)
 
 
 class CheckGroupAccessView(APIView):

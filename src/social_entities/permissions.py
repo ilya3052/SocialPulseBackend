@@ -1,4 +1,3 @@
-from icecream import ic
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
@@ -9,6 +8,7 @@ class IsAdminOrReadOnly(BasePermission):
             (request.user and
              request.user.is_staff)
         )
+
 
 class IsAuthenticatedAndOwner(BasePermission):
     def has_permission(self, request, view):

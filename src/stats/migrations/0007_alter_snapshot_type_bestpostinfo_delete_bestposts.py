@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0004_alter_group_added_at'),
         ('stats', '0006_remove_snapshotstats_last_updated_at'),
@@ -27,7 +26,8 @@ class Migration(migrations.Migration):
                 ('reposts_count', models.IntegerField()),
                 ('content', models.CharField(max_length=150)),
                 ('post_type', models.CharField(max_length=16)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='best_posts', to='social_entities.group')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='best_posts',
+                                            to='social_entities.group')),
             ],
         ),
         migrations.DeleteModel(

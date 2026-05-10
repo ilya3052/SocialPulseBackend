@@ -1,5 +1,4 @@
 from enum import IntEnum, Enum
-from typing import Union
 
 
 class Status(IntEnum):

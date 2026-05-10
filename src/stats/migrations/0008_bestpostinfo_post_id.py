@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('stats', '0007_alter_snapshot_type_bestpostinfo_delete_bestposts'),
     ]
