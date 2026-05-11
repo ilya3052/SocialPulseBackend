@@ -15,4 +15,4 @@ class IsAuthenticatedAndOwner(BasePermission):
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        return obj.user.filter(id=request.user.id).exists()
+        return obj.users.filter(id=request.user.id).exists()

@@ -30,21 +30,41 @@ class GroupsViewByID(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_staff and self.action == 'partial_update':
             return Group.objects.all()
-        return Group.objects.filter(user__in=[self.request.user])
+        return Group.objects.prefetch_related('users').filter(users__in=[self.request.user])
 
     def create(self, request, *args, **kwargs):
-        data = request.data.copy()
-        data['user_id'] = [self.request.user.id]
+        external_id = request.data.get('external_id')
+        platform = request.data.get('platform_id')
+        if not external_id or not platform:
+            return Response(
+                {"detail": "external_id и platform_id обязательны"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            group = Group.objects.get(external_id=external_id, platform=platform)
+            group.users.add(self.request.user)
+            return Response(status=status.HTTP_200_OK)
+        except Group.DoesNotExist:
+            data = request.data.copy()
+            data['user_id'] = [self.request.user.id]
+            serializer = self.get_serializer(data=data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            group = serializer.save()
+            # отсюда посылается сигнал post_save
+            AbsoluteStats.objects.create(group=group)
+            return Response(status=status.HTTP_201_CREATED)
 
-        serializer = self.get_serializer(data=data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        self.perform_create(serializer)
-        # отсюда посылается сигнал post_save
-        group = serializer.instance
-        AbsoluteStats.objects.create(group=group)
-        return Response(status=status.HTTP_201_CREATED)
+    def destroy(self, request, *args, **kwargs):
+        group = self.get_object()
+        user = request.user
+        users_count = group.users.count()
+        if not group.users.filter(id=user.id).exists():
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if users_count == 1:
+            return super().destroy(request, *args, **kwargs)
+        group.users.remove(user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):

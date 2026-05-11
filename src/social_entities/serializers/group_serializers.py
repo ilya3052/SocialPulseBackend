@@ -43,8 +43,8 @@ class GroupSerializer(serializers.ModelSerializer):
         source='platform',
         write_only=True
     )
-    user = CustomUserSerializer(read_only=True, many=True)  # а надо ли возвращать?
-    user_id = serializers.PrimaryKeyRelatedField(
+    users = CustomUserSerializer(read_only=True, many=True)  # а надо ли возвращать?
+    users_ids = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source='user',
         many=True,
@@ -63,5 +63,5 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = ('id', 'name', 'slug', 'link', 'external_id', 'added_at',
                   'platform_id', 'platform',
-                  'user', 'user_id',
+                  'users', 'users_ids',
                   'service_account_id', 'abs_stats')
