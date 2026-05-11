@@ -26,7 +26,7 @@ class Group(models.Model):
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
 
     platform = models.ForeignKey('Platform', on_delete=models.CASCADE)
-    user = models.ManyToManyField('users.CustomUser')
+    users = models.ManyToManyField('users.CustomUser')
     service_account = models.ForeignKey('service_accounts.ServiceAccount', on_delete=models.SET_NULL, null=True,
                                         related_name='groups')
 
