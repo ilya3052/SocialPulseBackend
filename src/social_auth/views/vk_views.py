@@ -36,6 +36,7 @@ class VKCallbackView(APIView):
             headers=headers,
             params=params
         )
+        # при ошибке акцес токена возвращать на клиента ошибку и делать запрос к вк для обновления
         data = req.json().get('response')[0]
         vk_id = data.get('id')
         first_name = data.get('first_name')
