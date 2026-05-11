@@ -60,11 +60,6 @@ class UserAPIView(APIView):
     def patch(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
 
-        if request.data.get('tg_id', None):
-            old_user = User.objects.filter(tg_id=request.data.get('tg_id')).first()
-            if old_user:
-                old_user.delete()
-
         serializer = CustomUserSerializer(user, data=request.data, partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
