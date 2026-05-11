@@ -46,6 +46,17 @@ class GroupsViewByID(viewsets.ModelViewSet):
         AbsoluteStats.objects.create(group=group)
         return Response(status=status.HTTP_201_CREATED)
 
+    def destroy(self, request, *args, **kwargs):
+        group = self.get_object()
+        user = request.user
+        users_count = group.users.count()
+        if not group.users.filter(id=user.id).exists():
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if users_count == 1:
+            return super().destroy(request, *args, **kwargs)
+        group.users.remove(user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsAuthenticatedAndOwner]
