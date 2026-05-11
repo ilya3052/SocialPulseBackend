@@ -3,6 +3,19 @@ from rest_framework import serializers
 from stats.models import Snapshot, SnapshotStats, AbsoluteStats
 
 
+class SnapshotStatsSerializer(serializers.ModelSerializer):
+    snapshot_id = serializers.PrimaryKeyRelatedField(
+        queryset=Snapshot.objects.all(),
+        source='snapshot',
+        write_only=True
+    )
+
+    class Meta:
+        model = SnapshotStats
+        fields = ('id', 'likes_count', 'views_count', 'participants_delta', 'repost_count', 'comms_count', 'coverage',
+                  'snapshot_id')
+
+
 class SnapshotSerializer(serializers.ModelSerializer):
     from social_entities.models import Group
 
@@ -12,24 +25,11 @@ class SnapshotSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
+    stats = SnapshotStatsSerializer(read_only=True, many=True)
+
     class Meta:
         model = Snapshot
-        fields = ('id', 'timestamp', 'type', 'group_id')
-
-
-class SnapshotStatsSerializer(serializers.ModelSerializer):
-    snapshot_id = serializers.PrimaryKeyRelatedField(
-        queryset=Snapshot.objects.all(),
-        source='snapshot',
-        write_only=True
-    )
-
-    snapshot = SnapshotSerializer(read_only=True)
-
-    class Meta:
-        model = SnapshotStats
-        fields = ('id', 'likes_count', 'views_count', 'participants_delta', 'repost_count', 'comms_count', 'coverage',
-                  'snapshot_id', 'snapshot')
+        fields = ('id', 'timestamp', 'type', 'group_id', 'stats')
 
 
 class AbsoluteStatsSerializer(serializers.ModelSerializer):
