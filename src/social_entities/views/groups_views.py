@@ -83,7 +83,6 @@ class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return (Group.objects
-                .select_related('service_account')
                 .prefetch_related('service_account__data')
                 .select_related('platform')
                 .prefetch_related('users'))
