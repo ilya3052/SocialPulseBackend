@@ -5,29 +5,12 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
 from service_accounts.services import get_service_account_data
-from social_entities.models import Group, Platform
+from social_entities.models import Group
 from social_entities.permissions import IsAuthenticatedAndOwner
 from social_entities.serializers import GroupSerializer
 from social_entities.services import check_access_function, get_group_info
 from social_entities.utils import Platforms
 from stats.models import AbsoluteStats
-
-
-def format_filter_kwargs(data):
-    filters = {}
-    min_p = data.get('min_participants')
-    max_p = data.get('max_participants')
-    if 'platform' in data:
-        filters['platform'] = Platform.objects.get(alias=data.get('platform'))
-    if min_p is not None and max_p is not None:
-        filters['abs_stats__participants_count__range'] = (int(min_p), int(max_p))
-    elif min_p is not None:
-        filters['abs_stats__participants_count__gte'] = int(min_p)
-    elif max_p is not None:
-        filters['abs_stats__participants_count__lte'] = int(max_p)
-    if 'q' in data:
-        filters['name__icontains'] = data.get('q')
-    return filters
 
 
 class GroupsViewByID(viewsets.ModelViewSet):
@@ -49,8 +32,14 @@ class GroupsViewByID(viewsets.ModelViewSet):
             return Group.objects.all()
         data = self.request.GET.copy()
         data.pop('exclude_fields')
-        filter_kwargs = format_filter_kwargs(data.dict())
-        return Group.objects.prefetch_related('users').filter(users__in=[self.request.user], **filter_kwargs)
+        filter_kwargs = {}
+        if 'q' in data:
+            filter_kwargs['name__icontains'] = data.get('q')
+        return (Group.objects
+                .prefetch_related('users')
+                .prefetch_related('abs_stats')
+                .filter(users__in=[self.request.user], **filter_kwargs)
+                .order_by('abs_stats__participants_count'))
 
     def create(self, request, *args, **kwargs):
         external_id = request.data.get('external_id')
