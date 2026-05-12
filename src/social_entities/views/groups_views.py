@@ -86,7 +86,7 @@ class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):
                 .select_related('service_account')
                 .prefetch_related('service_account__data')
                 .select_related('platform')
-                .prefetch_related('user'))
+                .prefetch_related('users'))
 
     def retrieve(self, request, *args, **kwargs):
         group = self.get_object()
