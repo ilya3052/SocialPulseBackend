@@ -131,3 +131,30 @@ class CheckGroupAccessView(APIView):
 
         result, status_code = check_access_function.get(platform)(internal_data)
         return Response(result, status_code)
+
+
+class CompareGroupsView(APIView):
+    permission_classes = [IsAuthenticatedAndOwner]
+
+    context = {
+        'exclude_fields': ['last_updated_at']
+    }
+
+    def get(self, request, *args, **kwargs):
+        # функционал вынесется в отдельный сервис когда будут реализовываться отчеты
+        groups_ids_str = request.GET.dict().get('groups_ids', None)
+        if not groups_ids_str:
+            return Response({"error": "Не выбраны группы для сравнения"}, status=status.HTTP_404_NOT_FOUND)
+        group_ids = list(map(int, groups_ids_str.split(',')))
+
+        groups = (Group.objects
+                  .select_related('platform')
+                  .prefetch_related('abs_stats')
+                  .prefetch_related('snapshot__stats')
+                  .filter(id__in=group_ids, snapshot__timestamp__gte=(datetime.now() - timedelta(days=7)).date(),
+                          snapshot__type='DAILY')
+                  .annotate(increase=Sum('snapshot__stats__participants_delta')))
+
+        serializer = CompareGroupsSerializer(groups, many=True, context=self.context)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
