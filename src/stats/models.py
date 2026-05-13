@@ -34,7 +34,7 @@ class Snapshot(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     type = models.CharField(max_length=6, choices=Type)
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE,
-                              related_name='snapshot_stats')  # Group.objects.get().snapshot_stats.all()
+                              related_name='snapshot')  # Group.objects.get().snapshot.all()
 
 
 class SnapshotStats(models.Model):

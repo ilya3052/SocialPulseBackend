@@ -65,3 +65,33 @@ class GroupSerializer(serializers.ModelSerializer):
                   'platform_id', 'platform',
                   'users', 'users_ids',
                   'service_account_id', 'abs_stats')
+
+
+class CompareGroupsSerializer(serializers.Serializer):
+    id = serializers.IntegerField(source='pk', read_only=True)
+    name = serializers.CharField(max_length=128, read_only=True)
+    link = serializers.CharField(max_length=256, read_only=True)
+    platform = serializers.SerializerMethodField(read_only=True)
+    added_at = serializers.DateTimeField(read_only=True)
+
+    abs_stats = serializers.SerializerMethodField(read_only=True)
+
+    increase = serializers.IntegerField(read_only=True)
+
+    def get_platform(self, obj):
+        from social_entities.serializers import PlatformSerializer
+
+        if not obj.platform:
+            return None
+        serializer = PlatformSerializer(obj.platform, context=self.context)
+        return serializer.data
+
+    def get_abs_stats(self, obj):
+        from stats.serializers import AbsoluteStatsSerializer
+        from stats.models import AbsoluteStats
+
+        stats = AbsoluteStats.objects.get(group_id=obj.id)
+        if not stats:
+            return None
+        serializer = AbsoluteStatsSerializer(stats, context=self.context)
+        return serializer.data
