@@ -66,5 +66,6 @@ class PostMetrics(models.Model):
     has_media = models.BooleanField(default=False)
 
     text_length = models.IntegerField()
+    timestamp = models.DateTimeField(default=timezone.now)
 
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='posts')
