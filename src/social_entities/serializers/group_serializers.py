@@ -46,7 +46,7 @@ class GroupSerializer(serializers.ModelSerializer):
     users = CustomUserSerializer(read_only=True, many=True)  # а надо ли возвращать?
     users_ids = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
-        source='user',
+        source='users',
         many=True,
         write_only=True
     )
