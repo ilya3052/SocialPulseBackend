@@ -43,7 +43,7 @@ class SnapshotStats(models.Model):
     participants_delta = models.IntegerField()
     repost_count = models.IntegerField()
     comms_count = models.IntegerField()
-    coverage = models.IntegerField()
+    ERR = models.DecimalField(max_digits=5, decimal_places=4)
     snapshot = models.ForeignKey('Snapshot', on_delete=models.CASCADE,
                                  related_name='stats')  # Snapshot.objects.get().stats.all()
 
