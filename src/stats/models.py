@@ -46,3 +46,25 @@ class SnapshotStats(models.Model):
     coverage = models.IntegerField()
     snapshot = models.ForeignKey('Snapshot', on_delete=models.CASCADE,
                                  related_name='stats')  # Snapshot.objects.get().stats.all()
+
+
+class PostMetrics(models.Model):
+    post_id = models.IntegerField()
+
+    likes_count = models.IntegerField()
+    views_count = models.IntegerField()
+    reposts_count = models.IntegerField()
+    comms_count = models.IntegerField()
+
+    hour = models.IntegerField()
+    day_of_week = models.IntegerField()
+    is_weekend = models.BooleanField(default=False)
+    is_night = models.BooleanField(default=False)
+    is_prime_time = models.BooleanField(default=False)
+
+    has_text = models.BooleanField(default=False)
+    has_media = models.BooleanField(default=False)
+
+    text_length = models.IntegerField()
+
+    group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='posts')

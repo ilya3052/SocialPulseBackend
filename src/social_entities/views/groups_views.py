@@ -58,7 +58,7 @@ class GroupsViewByID(viewsets.ModelViewSet):
             return Response(status=status.HTTP_200_OK)
         except Group.DoesNotExist:
             data = request.data.copy()
-            data['user_id'] = [self.request.user.id]
+            data['users_ids'] = [self.request.user.id]
             serializer = self.get_serializer(data=data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
