@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from social_entities.services import delete_group
 from users.serializers import UserRegisterSerializer, CustomUserSerializer, UserPasswordSerializer, \
     UserSetPasswordSerializer, UserSocialDataSerializer
 
@@ -141,3 +142,27 @@ class UserSocialDataView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UnbindSocialView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        from social_entities.models import Group, Platform
+
+        platform = Platform.objects.get(alias=self.request.GET.dict().get('platform'))
+
+        user = get_object_or_404(User, id=request.user.id)
+        serializer = CustomUserSerializer(user, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        groups = Group.objects.filter(users__in=[self.request.user], platform=platform)
+
+        user = request.user
+        status_codes = []
+        for group in groups:
+            status_codes.append(delete_group(group, user) == 204)
+        if not all(status_codes):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)

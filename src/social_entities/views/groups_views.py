@@ -11,7 +11,7 @@ from service_accounts.services import get_service_account_data
 from social_entities.models import Group
 from social_entities.permissions import IsAuthenticatedAndOwner
 from social_entities.serializers import GroupSerializer, CompareGroupsSerializer
-from social_entities.services import check_access_function, get_group_info
+from social_entities.services import check_access_function, get_group_info, delete_group
 from social_entities.utils import Platforms
 from stats.models import AbsoluteStats
 
@@ -70,13 +70,8 @@ class GroupsViewByID(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         group = self.get_object()
         user = request.user
-        users_count = group.users.count()
-        if not group.users.filter(id=user.id).exists():
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if users_count == 1:
-            return super().destroy(request, *args, **kwargs)
-        group.users.remove(user)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        status_code = delete_group(group, user)
+        return Response(status=status_code)
 
 
 class GroupsViewBySlug(mixins.RetrieveModelMixin, GenericViewSet):

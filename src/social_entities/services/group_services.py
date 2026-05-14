@@ -175,3 +175,14 @@ get_group_info_function = {
     Platforms.VK: get_vk_info,
     Platforms.TG: get_tg_info
 }
+
+
+def delete_group(group_obj: Group, user):
+    users_count = group_obj.users.count()
+    if not group_obj.users.filter(id=user.id).exists():
+        return status.HTTP_404_NOT_FOUND
+    if users_count == 1:
+        group_obj.delete()
+        return status.HTTP_204_NO_CONTENT
+    group_obj.users.remove(user)
+    return status.HTTP_204_NO_CONTENT
