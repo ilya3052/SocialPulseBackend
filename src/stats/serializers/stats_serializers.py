@@ -12,7 +12,7 @@ class SnapshotStatsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SnapshotStats
-        fields = ('id', 'likes_count', 'views_count', 'participants_delta', 'repost_count', 'comms_count', 'coverage',
+        fields = ('id', 'likes_count', 'views_count', 'participants_delta', 'repost_count', 'comms_count', 'ERR',
                   'snapshot_id')
 
 
