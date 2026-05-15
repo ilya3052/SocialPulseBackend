@@ -63,7 +63,6 @@ class PostMetrics(models.Model):
     is_prime_time = models.BooleanField(default=False)
 
     has_text = models.BooleanField(default=False)
-    has_media = models.BooleanField(default=False)
 
     text_length = models.IntegerField()
     timestamp = models.DateTimeField(default=timezone.now)
