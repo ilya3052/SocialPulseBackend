@@ -69,3 +69,11 @@ class PostMetrics(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
 
     group = models.ForeignKey('social_entities.Group', on_delete=models.CASCADE, related_name='posts')
+
+    is_morning = models.BooleanField(default=False)
+    is_lunch = models.BooleanField(default=False)
+    like_view_ratio = models.FloatField(default=0.0)
+    er = models.FloatField(default=0.0)
+    has_video = models.BooleanField(default=False)
+    has_photo = models.BooleanField(default=False)
+    word_count = models.IntegerField(default=0)
