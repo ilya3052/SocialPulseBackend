@@ -21,11 +21,12 @@ from common.views import DebugView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v5/debug/', DebugView.as_view(), name='error'),
-    path('api/v5/users/', include('users.urls'), name='users'),
-    path('api/v5/auth/', include('social_auth.urls'), name='auth'),
-    path('api/v5/admin/', include('social_admin.urls'), name='admin-panel'),
-    path('api/v5/service-accounts/', include('service_accounts.urls'), name='service-accounts'),
-    path('api/v5/social-entities/', include('social_entities.urls'), name='social-entities'),
-    path('api/v5/stats/', include('stats.urls'), name='stats')
+    path('api/v6/debug/', DebugView.as_view(), name='error'),
+    path('api/v6/users/', include('users.urls'), name='users'),
+    path('api/v6/auth/', include('social_auth.urls'), name='auth'),
+    path('api/v6/admin/', include('social_admin.urls'), name='admin-panel'),
+    path('api/v6/service-accounts/', include('service_accounts.urls'), name='service-accounts'),
+    path('api/v6/social-entities/', include('social_entities.urls'), name='social-entities'),
+    path('api/v6/stats/', include('stats.urls'), name='stats'),
+    path('api/v6/reports', include('reports.urls'), name='reports')
 ]
