@@ -34,7 +34,7 @@ class GroupsViewByID(viewsets.ModelViewSet):
         if self.request.user.is_staff and self.action == 'partial_update':
             return Group.objects.all()
         data = self.request.GET.copy()
-        data.pop('exclude_fields')
+        data.pop('exclude_fields', None)
         filter_kwargs = {}
         if 'q' in data:
             filter_kwargs['name__icontains'] = data.get('q')
