@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'service_accounts',
     'common',
     'stats',
+    'reports',
 
     'rest_framework',
     'rest_framework_simplejwt',
