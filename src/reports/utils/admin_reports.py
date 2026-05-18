@@ -1,10 +1,8 @@
 import os
 import subprocess
 from datetime import datetime
-from pathlib import Path
 
 import xlsxwriter
-
 from xlsxwriter import Workbook
 
 from social_pulse.settings import MEDIA_ROOT, MEDIA_URL
@@ -259,5 +257,4 @@ def generate_admin_report_pdf(file_path):
 
     subprocess.run(command_convert, capture_output=True, text=True, check=True)
     os.remove(file_path)
-    return relative_path
-
+    return output_path, relative_path
