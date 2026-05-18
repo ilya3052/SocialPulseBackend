@@ -28,5 +28,5 @@ urlpatterns = [
     path('api/v6/service-accounts/', include('service_accounts.urls'), name='service-accounts'),
     path('api/v6/social-entities/', include('social_entities.urls'), name='social-entities'),
     path('api/v6/stats/', include('stats.urls'), name='stats'),
-    path('api/v6/reports', include('reports.urls'), name='reports')
+    path('api/v6/reports/', include('reports.urls'), name='reports')
 ]
